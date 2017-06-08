@@ -9,9 +9,10 @@ class Client {
 
 	init() {
 		this.canvas.init(this.document.documentElement.clientWidth - 2, this.document.documentElement.clientHeight - 224);
-		this.canvas.paint();
+		//this.canvas.paint();
 		$('pencilWidth').value = 1;
 		$('saturation').value = 10;
+		this.timer();
 	}
 
 
@@ -19,12 +20,15 @@ class Client {
 		var This = this;
 		$('clearCanvas').onclick = function() {
 			This.canvas.clear();
+			This.canvas.sendData(2,0);
 		}
 		$('undo').onclick = function(){
 			This.canvas.undo()
+			This.canvas.sendData(2,1);
 		}
 		$('redo').onclick = function() {
 			This.canvas.redo();
+			This.canvas.sendData(2,2);
 		}
 		$('pencilWidth').onchange = function() {
 			This.canvas.setWidth(this.value);
@@ -55,7 +59,14 @@ class Client {
 	}
 	
 	timer() {
-			
+		var time_left = 60;
+		var timer = setInterval(function() {
+			if(time_left == 0) {
+				clearInterval(timer);
+				return 0;
+			}
+			time_left--;
+			$('time-left').innerText = time_left;
+		},1000);
 	}
-
 }

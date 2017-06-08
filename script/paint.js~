@@ -1,5 +1,11 @@
-
 function $(id) { return document.getElementById(id); }
+var START = 0;
+var DRAWING = 1;
+var OPRERATE = 2;
+var CLEAR = 0;
+var UNDO = 1;
+var REDO = 2;
+var SAVE = 3;
 var colorTable = {
 	BLACK : 'hsl(0, 0%, ',
 	RED : 'hsl(0, 100%, ',
@@ -20,6 +26,7 @@ class myCanvas {
 		this.lastY = 0;
 		this.history = new Array();
 		this.historyStep = -1;
+		this.ws = new WebSocket("ws://localhost:4000");
 	}
 	init(width, height) {
 		this.canvas.width = width;
@@ -28,6 +35,9 @@ class myCanvas {
 		this.setColor();
 		this.setWidth();
 		this.clear();
+		this.ws.onclose = function() {
+			alert("ws disconnect");
+		}
 	}
 	setWidth(width = 1) {
 		this.context.lineWidth = width;
@@ -55,6 +65,65 @@ class myCanvas {
 	}
 	getAplpha() {
 		return this.context.globalAlpha;
+	}
+	sendData(type, x, y) {
+		if (type == START) {
+			var color = this.getColor();
+			var width = this.getWidth();
+			var data = {
+				type : START,
+				x : x,
+				y : y,
+				color : color,
+				width : width
+			}
+		} else if (type == DRAWING) {
+			var data = {
+				type : DRAWING,
+				x : x,
+				y : y
+			}	
+		} else {
+			var data = {
+				type : OPRERATE,
+				opr : x
+			}
+		}
+		data = JSON.stringify(data);
+		console.log(data);
+		this.ws.send(data);
+	}
+	getData() {
+		var This = this;
+		this.ws.onmessage = function(event) {
+			var data = event.data;
+			data = JSON.parse(data);
+			console.log(data);
+			if(data.type == START) {
+				This.setWidth(data.width);
+				This.context.strokeStyle = data.color;
+				This.drawStart(data.x, data.y);
+			} else if (data.type == DRAWING) {
+				This.drawing(data.x, data.y);	
+			} else {
+				switch(data.opr) {
+					case UNDO :
+						This.undo();
+						break;
+					case REDO :
+						This.redo();
+						break;
+					case CLEAR:
+						This.clear();
+						break;
+					case SAVE:
+						This.save();
+						break;
+					default:
+						break;
+				}
+			}
+		}
 	}
 	drawStart(x, y) {
 		this.lastX = x;
@@ -103,6 +172,15 @@ class myCanvas {
 		this.save();
 	}
 }
+class ShowCanvas extends myCanvas {
+	constructor(canvas) {
+		super(canvas);
+	}
+	show () {
+		this.getDate();
+	}
+
+}
 class PaintCanvas extends myCanvas {
 	constructor(canvas) {
 		super(canvas);
@@ -127,24 +205,30 @@ class PaintCanvas extends myCanvas {
 		var mousePressed = false;
 		var touchPressed = false;
 		this.canvas.onmousedown = function(event) {
+			var color = This.getColor();
+			var width = This.getWidth();
 			This.drawStart(This.getX(event), This.getY(event));
+			This.sendData(START, This.getX(event), This.getY(event));
 			mousePressed = true;
 		}
 		this.canvas.onmousemove = function(event) {
 			if(mousePressed) {
 				This.drawing(This.getX(event), This.getY(event));
+				This.sendData(DRAWING, This.getX(event), This.getY(event), 0);
 			}
 		}
 		this.canvas.onmouseup  = function(event) {
 			if(mousePressed) {
 				mousePressed = false;
 				This.save();
+				This.sendData(OPRERATE, SAVE);
 			}
 		}
 		this.canvas.onmouseleave = function(event) {
 			if(mousePressed) {
 				mousePressed = false;
 				This.save();
+				This.sendData(OPRERATE, SAVE);
 			}
 		}
 

@@ -346,10 +346,10 @@ window.onload = function() {
 	}
 	message_scroll('李浩然','锤子');
 	var canvas = $('paint');
-	mycanvas = new PaintCanvas(canvas);
+	mycanvas = new ShowCanvas(canvas);
 	var client = new Client(mycanvas, document);
 	client.init();
-	client.btnFn();
+	client.canvas.getData();
 }
 	</script>
 </html>

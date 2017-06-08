@@ -98,10 +98,10 @@ html,body {
 				background-position: 0 0;
 			}
 			#time-left {
-				background-position: 0 -30px;
+				background-position: 1px -30px;
 				float: left;
 				font-size: 10px;
-				line-height: 32px;
+				line-height: 33px;
 			}
 			.top-btn-right {
 				position: absolute;
@@ -280,9 +280,11 @@ html,body {
 		</style>
 	</head>
 	<body>
+		<!--
 		<div id='result'>
 			<div id='result-answer'>钻戒</div>
 		</div>
+		-->
 		<div id="title">
 			<div class='top-btn-left'>
 				<div class='top-btn' id='undo'></div>
@@ -290,7 +292,7 @@ html,body {
 			</div>
 			<div id='subject'>题目:<span id='item'>钻戒</span></div>
 			<div class='top-btn-right'>
-				<div class='top-btn' id='time-left'>30s</div>
+				<div class='top-btn' id='time-left'>60</div>
 				<div class='top-btn' id='clearCanvas'></div>
 			</div>
 		</div>
@@ -347,6 +349,7 @@ window.onload = function() {
 	mycanvas = new PaintCanvas(canvas);
 	var client = new Client(mycanvas, document);
 	client.init();
+	client.canvas.paint();
 	client.btnFn();
 }
 	</script>
