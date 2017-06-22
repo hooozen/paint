@@ -33,9 +33,7 @@ class Client {
 		$('pencilWidth').onchange = function() {
 			This.canvas.setWidth(this.value);
 		}
-		$('saturation').onchange = function() {
-			This.canvas.setColor(This.color, this.value);
-		}
+
 		this.colorBlock($('color-block').childNodes);
 	}
 
@@ -57,7 +55,7 @@ class Client {
 		}
 
 	}
-	
+
 	timer() {
 		var time_left = 60;
 		var timer = setInterval(function() {

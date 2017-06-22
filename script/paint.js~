@@ -26,7 +26,7 @@ class myCanvas {
 		this.lastY = 0;
 		this.history = new Array();
 		this.historyStep = -1;
-		this.ws = new WebSocket("ws://localhost:4000");
+		this.ws = new WebSocket("ws://localhost:4000?client=paint");
 	}
 	init(width, height) {
 		this.canvas.width = width;
