@@ -4,7 +4,6 @@
 		<meta charset = "utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 		<link type="text/css" rel = "styleSheet" href="./style/index.css">
-		<link rel = "stylesheet" href = "style/dialog.css" type = "text/css">
 		<title>你瞎画我瞎猜</title>
 	</head>
 	<body>

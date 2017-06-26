@@ -10,12 +10,19 @@ define(SAVE, 8);
 define(PAINTER, 9);
 define(ANSWER, 10);
 define(SUBJECT, 11);
-Class WS {
+define(TIPS, 12);
+define(MESSAGE, 13);
+define(RIGHT, 14);
+define(USERNAME, 15);
+define(REBACK, 16);
+
+class WS {
 var $master;
 var $sockets = array();
 var $paintSocket;
 var $answerSocket = array();
 var $subjects = array('明远湖','逸夫楼','李浩然','修远楼','汽车试验场','修远湖');
+var $subject = null;
 
 function __construct($address, $port) {
 	$this->master = socket_create(AF_INET, SOCK_STREAM, SOL_TCP)
@@ -64,7 +71,6 @@ function __construct($address, $port) {
 				}
 			}
 		}
-		print_r($this->sockets);
 	}
 }
 function analyseMeg($socket, $buffer) {
@@ -73,15 +79,35 @@ function analyseMeg($socket, $buffer) {
 	case PAINTER:
 		$this->sockets[(int)$socket]['client'] = 'painter';
 		$rand = mt_rand(0, count($this->subjects)-1);
+		$this->subject = $this->subjects[$rand];
 		$msg = array('type'=>SUBJECT,'subject'=>$this->subjects[$rand]);
 		$this->send($socket, $msg);
-		echo "$msg\n";
+		break;
+	case ANSWER:
+		$this->sockets[(int)$socket]['client'] = 'answer';
+		$msg = array('type'=>TIPS, 'tips'=>iconv_strlen($this->subject));
+		$this->send($socket, $msg);
+		break;
+	case MESSAGE:
+		if($buffer->value == $this->subject) {
+			$buffer->type = RIGHT;
+			$buffer->value = "";
+		}
+		$this->broadcast($buffer, 'unknow');
+		break;
+	case USERNAME:
+		$this->sockets[(int)$socket]['userName'] = $buffer->name;
+		$msg = array('type'=>REBACK, 'statu'=>true);
+		print_r($this->sockets);
+		$this->send($socket, $msg);
 		break;
 	case STATR:
-		$this->broadcast($buffer, 0);
-		break;
-	case 10:
-		$this->sockets[(int)$socket]['client'] = 'answer';
+	case DRAWING:
+	case UNDO:
+	case REDO:
+	case SAVE:
+	case CLEAR:
+		$this->broadcast($buffer, 'painter');
 		break;
 	default:
 		break;
@@ -161,17 +187,14 @@ function send($socket, $msg) {
 	echo "$msg\n";
 	socket_write($socket, $msg, strlen($msg));
 }
-function broadcast($data, $isPainter) {
+function broadcast($data, $client) {
 	$data = $this->endecode($data);
 	foreach ($this->sockets as $socket) {
-		if($isPainter) {
-			if($socket['client'] == 'answer')
-				continue;
-		} else {
-			if($socket['client'] == 'painter')
-				continue;
-		}
 		if($socket['resource'] == $this->master) {
+			continue;
+		}
+		if($socket['client'] == $client) {
+			echo "xx";
 			continue;
 		}
 		socket_write($socket['resource'], $data, strlen($data));

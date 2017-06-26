@@ -4,6 +4,7 @@
 		<meta charset = "utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 		<link rel = "stylesheet" href = "style/index.css" type = "text/css">
+		<link rel = "stylesheet" href = "style/dialog.css" type = "text/css">
 		<title>你瞎画我瞎猜</title>
 	</head>
 	<body>
@@ -31,7 +32,7 @@
 				<div class='top-btn' id='undo'></div>
 				<div class='top-btn' id='redo'></div>
 			</div>
-			<div id='subject'>题目:<span id='item'>钻戒</span></div>
+			<div id='subject'>题目 <span id='item'></span></div>
 			<div class='top-btn-right'>
 				<div class='top-btn' id='time-left'>60</div>
 				<div class='top-btn' id='clearCanvas'></div>
@@ -70,24 +71,8 @@
 	<script type="text/javascript" src="./script/class.js"></script>
 	<script type="text/javascript">
 window.onload = function() {
-	function $(id) { return document.getElementById(id);}
-	function message_scroll(uname,umesg) {
-		var message = document.createElement('div');
-		message.className='message';
-		message.innerText=uname+":"+umesg;
-		$('title').appendChild(message);
-		var right=0;
-		var timer = setInterval(function(){
-			if (right>=$('title').offsetWidth+5) {
-				clearInterval(timer);
-			}
-			right += 2;
-			message.style.right = right+"px";
-		},20);
-	}
-	message_scroll('李浩然','锤子');
 	var canvas = $('paint');
-	var manager = new Manager("ws://192.168.9.9:4000");
+	var manager = new Manager("ws://localhost:4000");
 	var doc = document;
 	var client = new PaintClient(manager, canvas);
 }

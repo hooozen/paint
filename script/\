@@ -13,7 +13,6 @@ var TIPS = 12;
 var MESSAGE = 13; 
 var RIGHT = 14;
 var USERNAME = 15;
-var REBACK = 16;
 
 function $(id) {
 	return document.getElementById(id);
@@ -28,10 +27,6 @@ class Dialog {
 		var bgBlack = document.createElement('div');
 		bgBlack.id = "bg-black";
 		document.body.appendChild(bgBlack);	
-	}
-	remove() {
-		document.body.removeChild(this.dialog);
-		document.body.removeChild($('bg-black'));
 	}
 }
 
@@ -74,6 +69,10 @@ class SubjectDia extends Dialog {
 				This.remove();
 			}
 		},1000);
+	}
+	remove() {
+		document.body.removeChild(this.dialog);
+		document.body.removeChild($('bg-black'));
 	}
 }
 
@@ -137,15 +136,12 @@ class Manager {
 		this.ws.send(data);
 	}
 	getData(client) {
-		console.log('diagram' in client);
-		if('diagram' in client) {
-			console.log("xx");
-			var diagram = client.diagram;
-		}
+		var diagram = client.diagram;
 		this.ws.onmessage = function(event) {
 			var data = event.data;
 			data = JSON.parse(data);
 			console.log(data);
+			var tmp = '{"xx":1,"ss":"修远湖"}';
 			switch (data.type) {
 				case SUBJECT:
 					client.startGame(data.subject);	
@@ -179,10 +175,6 @@ class Manager {
 					break;
 				case RIGHT:
 					diagram.message("user", "", true)
-					break;
-				case REBACK:
-					client.remove();
-					console.log("success");
 					break;
 				default: 
 					break;
