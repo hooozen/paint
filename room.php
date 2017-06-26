@@ -1,4 +1,7 @@
 <!DOCTYPE html>
+<?php
+session_start();
+?>
 <html lang = 'zh'>
 	<head>
 		<meta charset = "utf-8">
@@ -112,10 +115,23 @@ footer {
 	</body>
 	<script type="text/javascript" src = "./script/class.js"></script>
 	<script type="text/javascript">
+	function text() {
+		console.log("xx");
+	 }
+	function getSessID() {
+		var arr = new Array();
+		var reg = new RegExp("(^| )PHPSESSID=([^;]*)(;|$)");
+		if(arr = document.cookie.match(reg)) {
+			return unescape(arr[2]);
+		} else {
+			console.log("xx");
+		}
+	}
 	window.onload = function() {
 		var manager = new Manager("ws://localhost:4000");
 		var regDia = new RegDialog('请输入姓名', manager);
 		manager.getData(regDia);
+		getSessID();
 	}
 	</script> 
 </html>
