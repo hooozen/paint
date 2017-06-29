@@ -12,11 +12,130 @@ var SUBJECT = 11;
 var TIPS = 12;
 var MESSAGE = 13; 
 var RIGHT = 14;
-var USERNAME = 15;
+var REGINF = 15;
 var REBACK = 16;
+var NEWLINK = 17;
+var USERS = 18;
+var USER_ORDER = 19;
+var USER_INF = 20;
+var REQUEST_START = 21;
+var START_GAME = 22;
 
 function $(id) {
 	return document.getElementById(id);
+}
+function getByCls(clsName, oParent) {
+	var oParent = oParent || document;
+	var tags = oParent.getElementsByTagName('*'); 
+	var aResult = new Array();
+	for(var i =0; i<tags.length; i++) {
+		if(tags[i].className == clsName) {
+			aResult.push(tags[i]);
+		} else {
+			var names = tags[i].className.split(" ");
+			for(var j=0; j<names.length; j++) {
+				if(names[j] == clsName) {
+					aResult.push(tags[i]);
+				}
+			}
+		}
+	}
+	return aResult;
+}
+function getSessID() {
+	var arr = new Array();
+	var reg = new RegExp("(^| )PHPSESSID=([^;]*)(;|$)");
+	if(arr = document.cookie.match(reg)) {
+		return unescape(arr[2]);
+	} else {
+		return null;
+	}
+}
+
+class User {
+	constructor() {
+		this.name = "";
+		this.face = Math.round(Math.random()*25);
+		this.order = "";
+		this.statu = 'out';
+		this.uType = 'normal';
+
+		this.saveCookie('face', this.face);
+		this.saveCookie('statu', this.statu);
+		this.saveCookie('uType', this.uType);
+	}
+	saveCookie(key, value) {
+		console.log(document.cookie);
+		document.cookie = key + "=" + value;
+	}
+}
+class Room {
+	constructor(manager) {
+		this.user = new User();
+		this.manager = manager;
+		this.dialog = new RegDialog('请输入姓名', manager, this.user);
+		this.manager.ws.onopen = function() {
+			manager.sendData(NEWLINK, getSessID());
+		}
+		manager.getData(this);
+		this.sitFn();
+	}
+	sitFn() {
+		var user = this.user,
+			This = this,
+			manager = this.manager,
+			seats = getByCls("seat"); 
+		for(var i = 0, len = seats.length; i<len; i++) {
+			seats[i].ii = i;
+			seats[i].onclick = function() {
+				if(this.nextSibling.nextSibling.innerText != "")  {
+					return;
+				}
+				user.order = this.ii;
+				user.saveCookie('order', user.order);
+				user.statu = 'waiting';
+				user.saveCookie('statu', user.statu);
+				manager.sendData(USER_ORDER, user.order);
+				This.startGame();
+			}
+		}
+	}
+	setUsers(data) {
+		var seats = getByCls('seat');	
+		for(var i=0; i<8; i++) {
+			for(var j=0; j<data['user_num']; j++) {
+				if(i == data[j].order) {
+					console.log(data[j]);
+					var face = data[j].face,
+						posX = face%5*74,
+						posY = Math.floor(face/5)*74;
+					seats[i].className += " sitted";
+					seats[i].style.backgroundPosition = posX + "px " + posY +"px";
+					seats[i].nextSibling.nextSibling.innerText = data[j].name;
+					break;
+				} else {
+					seats[i].className = "seat";
+					seats[i].nextSibling.nextSibling.innerText = null;
+				}
+			}
+		}
+		this.startGame();
+	}
+	startGame() {
+		var This = this,
+			manager = this.manager;
+		if(this.user.statu == 'waiting') {
+			$('start').value = '开始游戏';
+			$('start').onclick = function() {
+				This.user.uType = 'master';
+				This.user.saveCookie('uType', 'master');
+				manager.sendData(REQUEST_START);	
+			}
+		} else {
+			this.value = "请入座";
+			$('start').onclick = null;
+		}
+	}
 }
 class Dialog {
 	constructor(title) {
@@ -36,8 +155,9 @@ class Dialog {
 }
 
 class RegDialog extends Dialog {
-	constructor(title, manager) {
+	constructor(title, manager, user) {
 		super(title);
+		var This = this;
 		$('dialog-body').innerHTML = "<input type='input' id='user-name'><input type='button' value='确 定' id='name-confirm'>"
 		$('user-name').oninput = function() {
 			if(this.value == '' || this.value.length<1 || this.value.length>6) {
@@ -48,10 +168,13 @@ class RegDialog extends Dialog {
 				$('name-confirm').style.color = "#eee";
 				$('name-confirm').style.bordercolor = "#eee";
 				$('name-confirm').onclick = function() {
-					manager.sendData(USERNAME, $('user-name').value);
+					manager.sendData(REGINF, $('user-name').value, user.face);
+					user.name = $('user-name').value;
+					user.saveCookie('name', user.name);
 				}
 			}
 		}
+		console.log(This.userName);
 	}
 }
 
@@ -87,8 +210,20 @@ class Manager {
 	}
 
 	sendData(type, x, y, c, w) {
-		console.log("type:"+type+"x:"+x);
+		console.log("sendMsg: type:"+type+" x:"+x);
 		switch(type){
+			case NEWLINK:
+				var data = {
+					type : NEWLINK,
+					session : x
+				};
+				break;
+			case USER_ORDER:
+				var data = {
+					type : USER_ORDER,
+					order : x
+				}
+				break;
 			case PAINTER:
 				var data = {
 					type : PAINTER
@@ -121,10 +256,11 @@ class Manager {
 					value: x
 				}
 				break;
-			case USERNAME:
+			case REGINF:
 				var data = {
-					type : USERNAME,
-					name : x
+					type : REGINF,
+					name : x,
+					face : y,
 				}
 				break;
 			default:
@@ -137,18 +273,27 @@ class Manager {
 		this.ws.send(data);
 	}
 	getData(client) {
-		console.log('diagram' in client);
-		if('diagram' in client) {
-			console.log("xx");
-			var diagram = client.diagram;
-		}
 		this.ws.onmessage = function(event) {
 			var data = event.data;
+			if('diagram' in client) {
+				var diagram = client.diagram;
+			}
 			data = JSON.parse(data);
+			console.log("getMsg: ");
 			console.log(data);
 			switch (data.type) {
+				case USER_INF:
+					client.setUsers(data);
+					break;
 				case SUBJECT:
 					client.startGame(data.subject);	
+					break;
+				case START_GAME:
+					if(client.user.uType == 'master') {
+						window.location.href = "game.html";	
+					} else {
+						window.location.href = "show.html";
+					}
 					break;
 				case TIPS:
 					client.startGame(data.tips);
@@ -174,15 +319,13 @@ class Manager {
 					diagram.clear();
 					break;
 				case MESSAGE:
-					console.log("xx");
 					diagram.message("user", data.value, false);
 					break;
 				case RIGHT:
 					diagram.message("user", "", true)
 					break;
 				case REBACK:
-					client.remove();
-					console.log("success");
+					client.dialog.remove();
 					break;
 				default: 
 					break;
@@ -354,7 +497,6 @@ class ShowCanvas extends DiagramEdit {
 		this.memento.clear(this.canvas, this.context);
 	}
 }
-
 class Client {
 	constructor(manager, canvas) {
 		this.manager = manager;
@@ -368,12 +510,49 @@ class Client {
 				timerBox.innerText = i;	
 			}
 			if (i <= 0) {
-				clearInterval(timer);
+			clearInterval(timer);
 			}
 			i--;
 		}, 1000);
 	}
+	getCookie() {
+		var msg = {};
+		var cookie = document.cookie;
+		cookie = cookie.split("; ");	
+		for(var i = 0; i<cookie.length; i++) {
+			var tmp = cookie[i].split("=");
+			msg[tmp[0]] = tmp[1];	
+		}
+		return msg;
+	}
+	setUsers(data) {
+		var len = data.user_num;
+		for(var i = 0; i<len; i++) {
+			for(var j = i+1; j<len; j++) {
+				if(data[i].order > data[j]) {
+					var tmp = data[i];
+					data[i] = data[j];
+					data[j] = tmp;
+				}
+			}
+		}
+		for(var i = 0; i<len; i++) {
+			var oLi = document.createElement('li');
+			var face = data[i].face,
+				posX = face%5*40,
+				posY = Math.floor(face/5)*40,
+				imgPos = posX + "px " + posY + "px";
 
+			oLi.innerHTML= '<div class="score"></div><div class="uface" style="background-position:' + imgPos + '"></div><div class="unmae">'+data[i].name+'</div>';
+			$('user-list').appendChild(oLi);
+			if(data[i].uType == 'master') {
+				var paint = document.createElement("div");
+				paint.className = "painting";
+				oLi.appendChild(paint);
+			}
+
+		}
+	}
 }
 
 class PaintClient extends Client{
@@ -383,9 +562,13 @@ class PaintClient extends Client{
 		this.init();
 	}
 	init() {
-		var manager = this.manager;
+		var manager = this.manager,
+			cookie = this.getCookie();
 		this.manager.ws.onopen = function() {
-			manager.sendData(PAINTER);
+			cookie.type = PAINTER;
+			cookie = JSON.stringify(cookie);
+			console.log(cookie);
+			manager.ws.send(cookie);
 		}
 		this.manager.getData(this);
 		$('pencilWidth').value = 1;
@@ -421,6 +604,13 @@ class PaintClient extends Client{
 				y = This.setY(event);
 			diagram.drawStart(x, y);
 		}
+		canvas.ontoucestart = function(event) {
+			mousePressed = true;
+			var x = This.setX(event),
+				y = This.setY(event);
+			diagram.drawStart(x, y);
+		}
+
 		canvas.onmousemove = function(event) {
 			if(mousePressed) {
 				var x = This.setX(event),
@@ -428,18 +618,40 @@ class PaintClient extends Client{
 				diagram.drawing(x, y);
 			}
 		}
+		canvas.ontouchmove = function(event) {
+			if(mousePressed) {
+				var x = This.setX(event),
+					y = This.setY(event);
+				diagram.drawing(x, y);
+			}
+		}
+
 		canvas.onmouseup = function() {
 			if(mousePressed) {
 				mousePressed = false;
 				diagram.save(manager);
 			}
 		}
+		canvas.ontouchend = function() {
+			if(mousePressed) {
+				mousePressed = false;
+				diagram.save(manager);
+			}
+		}
+
 		canvas.onmouseleave = function() {
 			if(mousePressed) {
 				mousePressed = false;
 				diagram.save(manager);
 			}
 		}
+		canvas.onmousecancel = function() {
+			if(mousePressed) {
+				mousePressed = false;
+				diagram.save(manager);
+			}
+		}
+
 
 	}
 
@@ -500,9 +712,13 @@ class ShowClient extends Client {
 		this.init();
 	}
 	init() {
-		var manager = this.manager;
+		var manager = this.manager,
+			cookie = this.getCookie();
 		this.manager.ws.onopen = function() {
-			manager.sendData(ANSWER);
+			cookie.type = ANSWER;
+			cookie = JSON.stringify(cookie);
+			console.log(cookie);
+			manager.ws.send(cookie);
 		}
 		this.manager.getData(this);
 		this.timer();
