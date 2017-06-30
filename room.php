@@ -33,8 +33,11 @@ a {
 	width: 25%;
 }
 .seat {
-	background: #eee;
+	background: url("images/icon/add.png") center center;
+	background-size: 73px 73px;
+	border: 1px solid #ddd;
 	border-radius: 5px;
+	box-sizing: border-box;
 	height: 74px;
 	margin: 4px auto;
 	width: 74px;
@@ -43,6 +46,7 @@ a {
 	background-image: url("images/faces/faces.jpg");
 	background-position: 0 0;
 	background-size: 370px, 370px;
+	border: none;
 }
 .title {
 	color: #8255fb;

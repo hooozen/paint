@@ -119,6 +119,7 @@ class Room {
 					seats[i].nextSibling.nextSibling.innerText = data[j].name;
 					break;
 				} else {
+					seats[i].style = null;
 					seats[i].className = "seat";
 					seats[i].nextSibling.nextSibling.innerText = null;
 				}
