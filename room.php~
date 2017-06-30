@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <?php
 session_start();
+$_SESSION['state'] = 'start';
 ?>
 <html lang = 'zh'>
 	<head>
@@ -38,6 +39,11 @@ a {
 	margin: 4px auto;
 	width: 74px;
 }
+.sitted {
+	background-image: url("images/faces/faces.jpg");
+	background-position: 0 0;
+	background-size: 370px, 370px;
+}
 .title {
 	color: #8255fb;
 	font-size: 25px;
@@ -69,6 +75,15 @@ footer {
 	font-size: 10px;
 	text-align: center;
 }
+.name {
+	color: #888;
+	height: 20px;
+	font-size: 12px;
+	line-height: 20px;
+	margin: 0 auto 5px;
+	text-align: center;
+	width: 80px;
+}
 		</style>
 	</head>
 	<body>
@@ -83,31 +98,39 @@ footer {
 		<div class = 'room'>
 			<div class = 'seat-wrap'>
 				<div class='seat'></div>
+				<div class='name'></div>
 			</div>
 			<div class = 'seat-wrap'>
 				<div class='seat'></div>
+				<div class='name'></div>
 			</div>
 			<div class = 'seat-wrap'>
 				<div class='seat'></div>
+				<div class='name'></div>
 			</div>
 			<div class = 'seat-wrap'>
 				<div class='seat'></div>
+				<div class='name'></div>
 			</div>
 			<div class = 'seat-wrap'>
 				<div class='seat'></div>
+				<div class='name'></div>
 			</div>
 			<div class = 'seat-wrap'>
 				<div class='seat'></div>
+				<div class='name'></div>
 			</div>
 			<div class = 'seat-wrap'>
 				<div class='seat'></div>
+				<div class='name'></div>
 			</div>
 			<div class = 'seat-wrap'>
 				<div class='seat'></div>
+				<div class='name'></div>
 			</div>
 		</div>
 		<div class='btn-panel'>
-			<a href="game.html"><input id='start' type = 'button' value='开始游戏'></a>
+			<input id='start' type = 'button' value='请入座'>
 		</div>
 		<footer>
 			长大版你画我猜<br>2017软件系软件体系结构课程设计-Hozen@live.com
@@ -115,23 +138,9 @@ footer {
 	</body>
 	<script type="text/javascript" src = "./script/class.js"></script>
 	<script type="text/javascript">
-	function text() {
-		console.log("xx");
-	 }
-	function getSessID() {
-		var arr = new Array();
-		var reg = new RegExp("(^| )PHPSESSID=([^;]*)(;|$)");
-		if(arr = document.cookie.match(reg)) {
-			return unescape(arr[2]);
-		} else {
-			console.log("xx");
-		}
-	}
 	window.onload = function() {
 		var manager = new Manager("ws://localhost:4000");
-		var regDia = new RegDialog('请输入姓名', manager);
-		manager.getData(regDia);
-		getSessID();
+		var room = new Room(manager);
 	}
 	</script> 
 </html>

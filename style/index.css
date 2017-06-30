@@ -222,7 +222,9 @@ input[type='range']::-moz-range-thumb {
 	width: 20px
 }
 
-#user-list li img {
+.uface {
+	background: url('../images/faces/faces.jpg');
+	background-size: 200px;
 	border-radius: 2px;
 	height: 40px;
 	width: 40px;

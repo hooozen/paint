@@ -222,7 +222,9 @@ input[type='range']::-moz-range-thumb {
 	width: 20px
 }
 
-#user-list li img {
+.uface {
+	background: url('images/faces/faces.jpg');
+	background-size: 200px;
 	border-radius: 2px;
 	height: 40px;
 	width: 40px;
@@ -240,32 +242,6 @@ input[type='range']::-moz-range-thumb {
 	line-height: 20px;
 	white-space: nowrap;
 	position: absolute;
-}
-#bg-black {
-	background: rgba(0, 0, 0, 0.7);
-	bottom: 0;
-	left: 0;
-	position: absolute;
-	right: 0;
-	top: 0;
-	z-index: 100;
-}
-.dialog {
-	color: #fff;
-	font-size: 14px;
-	height: 200px;
-	left: 50%;
-	margin-left: -120px;
-	overflow: hidden;
-	position: fixed;
-	text-align: center;
-	text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
-	top: 100px;
-	width: 240px;
-	z-index: 101;
-}
-#dialog-title {
-	padding: 5px 0;
 }
 #subject-item {
 	font-size: 30px;

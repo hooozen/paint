@@ -53,7 +53,13 @@ function getSessID() {
 }
 
 class User {
-	constructor() {
+	constructor(cookie) {
+		if(typeof cookie != "undefined") {
+			for( var p in cookie) {
+				this[p] = cookie[p];
+			}
+			return;
+		}
 		this.name = "";
 		this.face = Math.round(Math.random()*25);
 		this.order = "";
@@ -65,7 +71,6 @@ class User {
 		this.saveCookie('uType', this.uType);
 	}
 	saveCookie(key, value) {
-		console.log(document.cookie);
 		document.cookie = key + "=" + value;
 	}
 }
@@ -210,7 +215,6 @@ class Manager {
 	}
 
 	sendData(type, x, y, c, w) {
-		console.log("sendMsg: type:"+type+" x:"+x);
 		switch(type){
 			case NEWLINK:
 				var data = {
@@ -252,8 +256,9 @@ class Manager {
 				break;
 			case MESSAGE:
 				var data = {
-					type: MESSAGE,
-					value: x
+					type : MESSAGE,
+					user : x,
+					value : y
 				}
 				break;
 			case REGINF:
@@ -270,6 +275,7 @@ class Manager {
 				break;
 		}
 		data = JSON.stringify(data);
+		console.log("sendMsg: type:"+data);
 		this.ws.send(data);
 	}
 	getData(client) {
@@ -319,10 +325,10 @@ class Manager {
 					diagram.clear();
 					break;
 				case MESSAGE:
-					diagram.message("user", data.value, false);
+					diagram.message(data.user, data.value, false);
 					break;
 				case RIGHT:
-					diagram.message("user", "", true)
+					diagram.message(data.user, "", true)
 					break;
 				case REBACK:
 					client.dialog.remove();
@@ -501,6 +507,9 @@ class Client {
 	constructor(manager, canvas) {
 		this.manager = manager;
 		this.canvas = canvas;
+		console.log(this.getCookie());
+		this.user = new User(this.getCookie());
+		console.log(this.user);
 	}
 	timer() {
 		var i = 65;
@@ -536,13 +545,13 @@ class Client {
 				}
 			}
 		}
+		$('user-list').innerHTML = null;
 		for(var i = 0; i<len; i++) {
 			var oLi = document.createElement('li');
 			var face = data[i].face,
 				posX = face%5*40,
 				posY = Math.floor(face/5)*40,
 				imgPos = posX + "px " + posY + "px";
-
 			oLi.innerHTML= '<div class="score"></div><div class="uface" style="background-position:' + imgPos + '"></div><div class="unmae">'+data[i].name+'</div>';
 			$('user-list').appendChild(oLi);
 			if(data[i].uType == 'master') {
@@ -584,7 +593,7 @@ class PaintClient extends Client{
 	}
 	setY(event) {
 		var event = event || window.event;
-		var cy = event.clientY ||event.touches[0].paegY;
+		var cy = event.clientY ||event.touches[0].pageY;
 		return cy - this.canvas.offsetTop;
 	}
 	startGame(subject) {
@@ -604,10 +613,11 @@ class PaintClient extends Client{
 				y = This.setY(event);
 			diagram.drawStart(x, y);
 		}
-		canvas.ontoucestart = function(event) {
+		canvas.ontouchstart = function(event) {
 			mousePressed = true;
 			var x = This.setX(event),
 				y = This.setY(event);
+			console.log("x:"+x+",y:"+y);
 			diagram.drawStart(x, y);
 		}
 
@@ -732,7 +742,8 @@ class ShowClient extends Client {
 	sendMsg() {
 		var manager = this.manager;
 		var msg = $('answer-input'),
-			btn = $('send-message');
+			btn = $('send-message'),
+			This = this;
 		msg.oninput = function() {
 			if(msg.value == '') {
 				btn.style.background = "#abc6f9";
@@ -742,7 +753,8 @@ class ShowClient extends Client {
 				btn.style.background = "#61a6f9";
 				btn.style.color = "#fff";
 				btn.onclick = function() {
-					manager.sendData(MESSAGE, msg.value);
+					console.log(This.user);
+					manager.sendData(MESSAGE, This.user.name, msg.value);
 					msg.value=null;
 					btn.onclick = null;
 					btn.style.background = "#abc6f9";
