@@ -109,8 +109,7 @@ class Room {
 		var seats = getByCls('seat');	
 		for(var i=0; i<8; i++) {
 			for(var j=0; j<data['user_num']; j++) {
-				if(i == data[j].order) {
-					console.log(data[j]);
+				if(i == data[j].order) { console.log(data[j]);
 					var face = data[j].face,
 						posX = face%5*74,
 						posY = Math.floor(face/5)*74;

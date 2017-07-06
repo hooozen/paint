@@ -292,6 +292,7 @@ input[type='range']::-moz-range-thumb {
 	border: none;
 	border-radius: 5px;
 	box-sizing: border-box;
+	color: #666;
 	height: 30px;
 	margin: 10px 1%;
 	outline: none;

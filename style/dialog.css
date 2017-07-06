@@ -32,10 +32,20 @@
 	display: block;
 	font-size: 20px;
 	height: 30px;
-	margin: 25px auto;
+	margin: 25px auto 2px;
 	outline: none;
 	text-align: center;
 	width: 80%;
+}
+#reg-msg {
+	color: #ddd;
+	font-size: 8px;
+	height: 15px;
+	line-height: 15px;
+	margin: 0 auto;
+	text-align: left;
+	text-indent: 13px;
+	width: 60px;
 }
 #name-confirm {
 	background: none;
