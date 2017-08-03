@@ -535,10 +535,10 @@ class Client {
 		return msg;
 	}
 	setUsers(data) {
-		var len = data.user_num;
+		var len = data.users.length;
 		for(var i = 0; i<len; i++) {
 			for(var j = i+1; j<len; j++) {
-				if(data[i].order > data[j]) {
+				if(data[i].order > data[j].order) {
 					var tmp = data[i];
 					data[i] = data[j];
 					data[j] = tmp;

@@ -1,0 +1,13 @@
+{
+    "libs": [
+	"broswer"
+    ],
+    "plugins": {
+	"requirejs": {
+	    "baseUrl": "./src",
+	    "paths": {
+		"zrender": "brower_components/zrender/src"
+	    }
+	}
+    }
+}

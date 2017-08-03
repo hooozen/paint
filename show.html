@@ -1,41 +1,38 @@
 <!DOCTYPE html>
 <html lang="zh-Hans">
-	<head>
-		<meta charset = "utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-		<link type="text/css" rel = "styleSheet" href="./style/index.css">
-		<link rel = "stylesheet" href = "style/dialog.css" type = "text/css">
-		<title>你瞎画我瞎猜</title>
-	</head>
-	<body>
-		<!--
-		<div id='result'>
-			<div id='result-answer'>钻戒</div>
-		</div>
-		-->
-		<div id="title">
-			<div id='subject'>提示 <span id='item'></span></div>
-			<div class='top-btn-right'>
-				<div class='top-btn' id='time-left'>60</div>
-			</div>
-		</div>
-		<div id='canvas-wrap'>
-			<canvas id="paint" width="100%" height="360px"></canvas>
-		</div>
-		<ul id='user-list'>
-		</ul>
-		<ul id = 'input-box'>
-			<input type = 'text' id = 'answer-input'>
-			<input type = 'button' id = 'send-message' value='发送'>
-		</ul>
+    <head>
+	<meta charset = "utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<link type="text/css" rel = "styleSheet" href="./style/index.css">
+	<link rel = "stylesheet" href = "style/dialog.css" type = "text/css">
+	<title>你瞎画我瞎猜</title>
+    </head>
+    <body>
+	<!--
+     <div id='result'>
+     <div id='result-answer'>钻戒</div>
+     </div>
+	-->
+	<div id="title">
+	    <div id='subject'>提示 <span id='item'></span></div>
+	    <div class='top-btn-right'>
+		<div class='top-btn' id='time-left'>60</div>
+	    </div>
+	</div>
+	<div id='canvas-wrap'>
+	    <canvas id="paint" width="100%" height="360px"></canvas>
+	</div>
+	<ul id='user-list'>
+	    <li><div class='painting'></div><div class='score'></div><div class='uface'></div><div class='uname'></div></li>
+	</ul>
 
-	</body>
-	<script type="text/javascript" src="./script/class.js"></script>
-	<script type="text/javascript">
+    </body>
+    <script type="text/javascript" src="./script/class.js"></script>
+    <script type="text/javascript">
 window.onload = function() {
-	var canvas = $('paint');
-	var manager = new Manager("ws://localhost:4000");
-	var client = new ShowClient(manager, canvas);
+    var canvas = $('paint');
+    var manager = new Manager("ws://localhost:4000");
+    var client = new ShowClient(manager, canvas);
 }
-	</script>
+    </script>
 </html>

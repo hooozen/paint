@@ -4,8 +4,8 @@ session_start();
 $_SESSION['state'] = 'start';
 ?>
 <html lang = 'zh'>
-	<head>
-		<meta charset = "utf-8">
+    <head>
+    <meta charset = "utf-8">
 		<meta name = "viewport" content = "width=device-width, initial-scale=1.0, user-scalable = no">
 		<link rel="stylesheet" href="style/index.css" type="text/css">
 		<link rel="stylesheet" href="style/dialog.css" type="text/css">
@@ -76,6 +76,7 @@ a {
 	color: #fff;
 	border-radius: 4px;
 	height: 40px;
+	outline: none;
 	width: 80%
 }
 footer {
@@ -162,10 +163,13 @@ footer {
 			长大版你画我猜<br>2017软件系软件体系结构课程设计-Hozen@live.com
 		</footer>
 	</body>
-	<script type="text/javascript" src = "./script/Class.js"></script>
-	<script type="text/javascript">
-	window.onload = function() {
-		var room = new roomClient("ws://localhost:4000");
-	}
-	</script> 
+	<script type="text/javascript" src = "./script/common.js"></script>
+	<script type="text/javascript" src = "./script/father.js"></script>
+	<script type="text/javascript" src = "./script/room.js"></script>
+<script type="text/javascript">
+window.onload = function() {
+    var manager = new Manager('ws://localhost:4000');
+    var room = new roomClient(manager);
+}
+</script> 
 </html>

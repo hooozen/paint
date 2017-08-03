@@ -1,75 +1,59 @@
 <!DOCTYPE html>
 <html lang="zh-Hans">
-	<head>
-		<meta charset = "utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-		<link rel = "stylesheet" href = "style/index.css" type = "text/css">
-		<link rel = "stylesheet" href = "style/dialog.css" type = "text/css">
-		<title>你瞎画我瞎猜</title>
-	</head>
-	<body>
-		<!--
-	  <div id='result'>
-	  <div id='result-answer'>钻戒</div>
-	  </div>
-		<div id="bg-black"></div>
-		<div class='dialog'>
-			<div id='dialog-title'>
-				你画
-			</div>
-			<div id='dialog-body'>
-				<div id = 'subject-item'>
-					李浩然
-				</div>
-				<div id = 'subject-tips'>
-					即将开始...
-				</div>
-			</div>
-		</div>
-		-->
-		<div id="title">
-			<div class='top-btn-left'>
-				<div class='top-btn' id='undo'></div>
-				<div class='top-btn' id='redo'></div>
-			</div>
-			<div id='subject'>题目 <span id='item'></span></div>
-			<div class='top-btn-right'>
-				<div class='top-btn' id='time-left'>60</div>
-				<div class='top-btn' id='clearCanvas'></div>
-			</div>
-		</div>
-		<div id='canvas-wrap'>
-			<canvas id="paint" width="100%" height="360px"></canvas>
-		</div>
-		<ul id='tool-bar'>
-			<ul id='width-block'>
-				<li><input id='pencilWidth' type='range' step='1' min='1' max='30' value='1'></li>
-				<li><input id='saturation' type='range' step='1'min='10' max='90' value='50'></li>
-			</ul>
-			<ul id='color-block'>
-				<li><div class="color" id='BLACK'></div></li>
-				<li><div class="color" id='RED'></div></li>
-				<li><div class="color" id='YELLOWr'></div></li>
-				<li><div class="color" id='YELLOWg'></div></li>
-				<li><div class="color" id='GREEN'></div></li>
-				<li><div class="color" id='CYANg'></div></li>
-				<li><div class="color" id='CYANb'></div></li>
-				<li><div class="color" id='BLUE'></div></li>
-				<li><div class="color" id='MAGENTAb'></div></li>
-				<li><div class="color" id='MAGENTAr'></div></li>
-			</ul>
-		</ul>
-		<ul id='user-list'>
-			<li><div class='painting'></div><div class='score'>5分</div><div class='uface'></div><div class='uname'>李浩然</div></li>
-		</ul>
-	</body>
-	<script type="text/javascript" src="./script/class.js"></script>
-	<script type="text/javascript">
+    <head>
+	<meta charset = "utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<link rel = "stylesheet" href = "style/index.css" type = "text/css">
+	<link rel = "stylesheet" href = "style/dialog.css" type = "text/css">
+	<title>你瞎画我瞎猜</title>
+    </head>
+    <body>
+	<div id="title">
+	    <div class='top-btn-left'>
+		<div class='top-btn' id='undo'></div>
+		<div class='top-btn' id='redo'></div>
+	    </div>
+	    <div id='subject'>题目 <span id='item'></span></div>
+	    <div class='top-btn-right'>
+		<div class='top-btn' id='time-left'>60</div>
+		<div class='top-btn' id='clearCanvas'></div>
+	    </div>
+	</div>
+	<div id='canvas-wrap'>
+	    <canvas id="paint" width="100%" height="360px"></canvas>
+	</div>
+	<ul id='tool-bar'>
+	    <ul id='width-block'>
+		<li><input id='pencilWidth' type='range' step='1' min='1' max='30' value='1'></li>
+		<li><input id='saturation' type='range' step='1'min='10' max='90' value='50'></li>
+	    </ul>
+	    <ul id='color-block'>
+		<li><div class="color" id='BLACK'></div></li>
+		<li><div class="color" id='RED'></div></li>
+		<li><div class="color" id='YELLOWr'></div></li>
+		<li><div class="color" id='YELLOWg'></div></li>
+		<li><div class="color" id='GREEN'></div></li>
+		<li><div class="color" id='CYANg'></div></li>
+		<li><div class="color" id='CYANb'></div></li>
+		<li><div class="color" id='BLUE'></div></li>
+		<li><div class="color" id='MAGENTAb'></div></li>
+		<li><div class="color" id='MAGENTAr'></div></li>
+	    </ul>
+	</ul>
+	<ul id='user-list'>
+	    <li><div class='painting'></div><div class='score'></div><div class='uface'></div><div class='uname'></div></li>
+	</ul>
+    </body>
+    <script type="text/javascript" src="./script/common.js"></script>
+    <script type="text/javascript" src="./script/father.js"></script>
+    <script type="text/javascript" src="./script/gameClient.js"></script>
+    <script type="text/javascript" src="./script/paintClient.js"></script>
+    <script type="text/javascript" src="./script/showClient.js"></script>
+    <script type="text/javascript">
 window.onload = function() {
-	var canvas = $('paint');
-	var manager = new Manager("ws://localhost:4000");
-	var doc = document;
-	var client = new PaintClient(manager, canvas);
+    var canvas = $('paint');
+    var manager = new Manager('ws://localhost:4000');
+    var client = new GameClient(manager, canvas);
 }
-	</script>
+    </script>
 </html>
