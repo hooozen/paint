@@ -33,7 +33,7 @@ class ShowClient extends GameClient {
     constructor(manager, canvas) {
         super(manager, canvas);
         this.diagram = new ShowCanvas(canvas, document.documentElement.clientWidth - 2, document.documentElement.clientHeight - 182, manager);
-        this.inputBox = new msgBox(this);
+        this.input = new msgBox(this);
     }
     startGame(msg) {
         var dialog = new SubjectDia("提示");

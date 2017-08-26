@@ -2,6 +2,7 @@ class PaintCanvas extends DiagramEdit {
     constructor(canvas, width, height, manager) {
         super(canvas, width, height);
         this.manager = manager;
+        this.type = 'painter';
     }
     drawStart(x, y) {
         this.lastX = x;
@@ -49,7 +50,6 @@ class PaintCanvas extends DiagramEdit {
 class PaintClient extends GameClient{
     constructor(manager, canvas) {
         super(manager, canvas);
-        this.type = 'painter';
         this.diagram = new PaintCanvas(canvas, document.documentElement.clientWidth - 2, document.documentElement.clientHeight - 224, this.manager);
         this.init();
     }
