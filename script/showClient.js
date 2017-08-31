@@ -13,8 +13,8 @@ class ShowCanvas extends DiagramEdit {
         context.lineTo(x, y);
         context.closePath();
         context.stroke();
-        this.lastX = x,
-            this.lastY = y;
+        this.lastX = x;
+        this.lastY = y;
     }
     save() {
         this.memento.save(this.canvas);
@@ -41,33 +41,4 @@ class ShowClient extends GameClient {
         $('item').innerText = msg.data + "个字";
         this.timer(msg.time);
     }
-    /*
-    sendMsg() {
-        var manager = this.manager;
-        var msg = $('answer-input'),
-            btn = $('send-message'),
-            This = this;
-        msg.oninput = function() {
-            if(msg.value == '') {
-                btn.style.background = "#abc6f9";
-                btn.style.color = "#e8e8e8";
-                btn.onclick = null;
-            } else {
-                btn.style.background = "#61a6f9";
-                btn.style.color = "#fff";
-                btn.onclick = function() {
-                    var data = {
-                        name : This.user.name,
-                        msg  : msg.value
-                    };
-                    manager.sendData(MESSAGE, data);
-                    msg.value=null;
-                    btn.onclick = null;
-                    btn.style.background = "#abc6f9";
-                    btn.style.color = "#e8e8e8";
-                }
-            }
-        }
-    }
-    */
 }

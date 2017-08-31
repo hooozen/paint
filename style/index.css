@@ -311,4 +311,16 @@ input[type='range']::-moz-range-thumb {
 	margin: 10px 1%;
 	width: 15%;
 }
+.round-score {
+    margin: 10px auto;
+    text-align: center;
+}
+#round-score-btn {
+    background: none;
+    border: 1px solid;
+    border-radius: 3px;
+    color: #fff;
+    font-size: 12px;
+    padding: 2px 8px;
+}
 

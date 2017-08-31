@@ -11,7 +11,8 @@ var REG_INF = 1,
     SUBJECT = 11,
     CLIENT = 12,
     GET_ANSWER = 13,
-    ANSWER = 14;
+    ANSWER = 14,
+    GAME_OVER = 15;
 var STYLE = 1001,
     START = 1002,
     DRAWING = 1003,
@@ -19,7 +20,8 @@ var STYLE = 1001,
     UNDO = 1005,
     REDO = 1006,
     SAVE = 1007,
-    REQUEST_PAINT = 1008;
+    REQUEST_PAINT = 1008,
+    CANVAS_SIZE = 1009;
 /*
  *简化获取dom节点的操作
  */

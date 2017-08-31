@@ -30,7 +30,6 @@ class msgBox {
                 btn.onclick = function() {
                     var data = new Object();
                     data.type = 1;
-                    console.log(client.user);
                     data.userName = client.user.name;
                     data.msgValue = msg.value;
                     manager.sendData(MESSAGE,data);
@@ -52,7 +51,7 @@ class msgBox {
  */
 class Manager {
     constructor(url) {
-        this.ws = new WebSocket(url);
+        this.ws = new WebSocket('ws://192.168.9.1:4000');
         this.ws.onclose = function() {
             alert("ws disconnect");
         }
@@ -62,20 +61,19 @@ class Manager {
         msg.type = type;
         msg.data = data;
         msg = JSON.stringify(msg);
-        console.log("sendMsg: "+msg);
         this.ws.send(msg);
     }
     getData(client) {
         this.ws.onmessage = function(event) {
             var msg = event.data;
             msg = JSON.parse(msg);
-            console.log("getMsg: ");
-            console.log(msg);
-
             switch (msg.type) {
                 case REG_RESULT:
-                    if (msg.data === "success")
+                    if (msg.data === "success") {
                         client.regDialog.remove();
+                    } else {
+                        client.regDialog.regFailed(msg);
+                    }
                     break;
                 case GAME_INF:
                     client.setGameInf(msg);
@@ -92,7 +90,6 @@ class Manager {
                             break;
                         }
                         client.user.setUser(msg.user);
-                        console.log(client.user);
                     }
                     break;
                 case USERS_INF:
@@ -110,6 +107,9 @@ class Manager {
                         }
                         client.showMsg(msg);
                     }
+                    break;
+                case CANVAS_SIZE:
+                    client.diagram.setCanvasSize(msg.size.width, msg.size.height);
                     break;
                 case SUBJECT:
                     client.startGame(msg);
@@ -138,6 +138,8 @@ class Manager {
                 case CLEAR:
                     client.diagram.clear();
                     break;
+                case GAME_OVER:
+                    client.gameOver(msg)
                 default: 
                     break;
             }
@@ -316,6 +318,11 @@ class DiagramEdit {
         this.memento.save(this.canvas);
         this.context.lineJoin = 'round';
     }
+    setCanvasSize(width, height) {
+        this.canvas.width = width;
+        this.canvas.height = height;
+        this.context.lineJoin = 'round';
+    }
     setWidth(width = 1) {
         this.context.lineWidth = width;
     }
@@ -334,6 +341,7 @@ class DiagramEdit {
     getColor() {
         return this.context.strokeStyle;
     }
+    /*
     message (uname, umesg, right) {
         var message = document.createElement('div');
         message.className='message';
@@ -354,5 +362,6 @@ class DiagramEdit {
             message.style.right = right+"px";
         },20);
     }
+    */
 }
 

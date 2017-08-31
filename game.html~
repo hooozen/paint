@@ -54,7 +54,6 @@ window.onload = function() {
     var canvas = $('paint');
     var manager = new Manager('ws://localhost:4000');
     var client = new GameClient(manager, canvas);
-    var resDia = new resDialog('鸡鸣狗盗');
 }
     </script>
 </html>

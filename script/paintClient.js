@@ -50,8 +50,11 @@ class PaintClient extends GameClient{
     constructor(manager, canvas) {
         super(manager, canvas);
         this.type = 'painter';
-        this.diagram = new PaintCanvas(canvas, document.documentElement.clientWidth - 2, document.documentElement.clientHeight - 224, this.manager);
+        var width = document.documentElement.clientWidth - 2,
+            height = document.documentElement.clientHeight - 224;
+        this.diagram = new PaintCanvas(canvas, width, height, this.manager);
         this.init();
+        this.setSize(width, height);
     }
     init() {
         this.editBtn();
@@ -60,15 +63,23 @@ class PaintClient extends GameClient{
         $('saturation').value = 0;
         this.requreStart('newgame');
     }
+    setSize(width, height) {
+        this.diagram.setCanvasSize(width, height);
+        var data = {
+            width: width,
+            height: height
+        }
+        this.manager.sendData(CANVAS_SIZE, data)
+    }
     setX(event) {
         var event = event || window.event;
         var cx = event.clientX || event.touches[0].pageX;
-        return cx - this.canvas.offsetLeft;
+        return cx - 2;
     }
     setY(event) {
         var event = event || window.event;
         var cy = event.clientY ||event.touches[0].pageY;
-        return cy - this.canvas.offsetTop;
+        return cy - 40;
     }
     requreStart(type) {
         this.manager.sendData(REQUEST_PAINT, type);
@@ -93,9 +104,9 @@ class PaintClient extends GameClient{
         }
         canvas.ontouchstart = function(event) {
             mousePressed = true;
+            event.preventDefault();
             var x = This.setX(event),
                 y = This.setY(event);
-            console.log("x:"+x+",y:"+y);
             diagram.drawStart(x, y);
         }
 

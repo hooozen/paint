@@ -23,7 +23,7 @@ class GameClient extends Client {
             client.user = this.user;
             this.manager.getData(client);
         } else {
-            window.location = 'gameRome.php';
+            window.location = 'gameRoom.php';
         }
 
     }
@@ -84,7 +84,6 @@ class GameClient extends Client {
                 timerBox.innerText = leftTime;	
             }
             if (leftTime <= 0) {
-                console.log(This.type);
                 timerBox.innerText = '0';
                 clearInterval(timer);
                 if (This.type === 'painter')
@@ -93,7 +92,18 @@ class GameClient extends Client {
         }, 500);
     }
     roundOver(msg) {
-        var resDia = new resDialog(msg.data); 
+        if(msg.gameOver) {
+            var resDia = new resDialog(msg, true); 
+            $('gameover-btn').onclick = function() {
+                resDia.remove();
+                var scoresDia = new overDialog();
+                scoresDia.showUp();
+                scoresDia.setMvp(msg.scores);
+            }
+        } else {
+            var resDia = new resDialog(msg, false); 
+            setTimeout("location.reload()", 3000);
+        }
     }
 }
 class SubjectDia extends Dialog {
@@ -125,9 +135,57 @@ class SubjectDia extends Dialog {
 }
 
 class resDialog extends Dialog {
-    constructor(answer) {
+    constructor(result, over) {
         super('答案');
-        this.diaBody.innerHTML = '<div style="font-size: 25px">' + answer + '</div><br><div id="res_timer">下一轮即将开始</div>';
+        this.answer = '<div style="font-size: 25px">' + result.answer + '</div>';
+        this.score = '<table class = "round-score"><tr><td>姓名</td><td>用时</td></tr>'
+        var score = '';
+        for (var item in result.score) {
+            score += '<tr><td>' + item + '</td><td>' + result.score[item] + 's</td></tr>';
+        }
+        if(over) {
+            this.score += score + '</table><input type="button" id="gameover-btn" value="游戏结束">';
+        } else {
+            this.score += score + '</table>';
+        }
+        this.diaBody.innerHTML = this.answer + this.score;
         this.showUp();
+    }
+}
+
+class overDialog extends Dialog {
+    constructor() {
+        super('结算');
+        this.resultTb = document.createElement('table');
+        this.resultTb.className = "final-scores";
+        this.diaBody.appendChild(this.resultTb);
+        this.overBtn = document.createElement('input');
+        this.overBtn.type = 'button';
+        this.overBtn.value = '完成';
+        this.diaBody.appendChild(this.overBtn);
+    }
+    setMvp(result) {
+        var painter = {
+            name: null,
+            ptime: 10000
+        };
+        var answerer = {
+            name: null,
+            atime: 10000
+        };
+        for (var i in result) {
+            if(result[i].ptime < painter.ptime) {
+                painter.name = i;
+                painter.ptime = result[i].ptime;
+            }
+            if(result[i].atime < answerer.atime) {
+                answerer.name = i;
+                answerer.atime = result[i].atime;
+            }
+        }
+        this.resultTb.innerHTML = '<tr><td>称号</td><td>姓名</td><td>总耗时</td></tr><tr><td>神乎其技</td><td>'+painter.name+'</td><td>'+painter.ptime+'s</td></tr><tr><td>洞察之眼</td><td>'+answerer.name+'</td><td>'+answerer.atime+'s</td></tr>';
+        this.overBtn.onclick = function() {
+            window.location = './gameRoom.php';
+        }
     }
 }

@@ -13,7 +13,7 @@ define(SUBJECT, 11);
 define(CLINET, 12);
 define(GET_ANSWER, 13);
 define(ANSWER, 14);
-define(GAMG_OVER, 15);
+define(GAME_OVER, 15);
 define(STYLE, 1001);
 define(START, 1002);
 define(DRAWING, 1003);
@@ -22,6 +22,7 @@ define(UNDO, 1005);
 define(REDO, 1006);
 define(SAVE, 1007);
 define(REQUEST_PAINT, 1008);
+define(CANVAS_SIZE, 1009);
 class Subject {
     private $subjects = array(
         '饼干', '笔记本', '矿泉水', '手机', '微软', '鼠标', '飞机', '程序员', '狗', '雪人', '蒙多',
@@ -54,6 +55,8 @@ class Server {
     private $gameTime = null;
     //当前玩家数量
     private $userNum = 2;
+    //当前游戏中玩家信息
+    private $players = [];
     //记录玩家座次
     private $userOrder = [];
     //单回合玩家用时时间
@@ -62,6 +65,8 @@ class Server {
     private $scores = [];
     //当前绘画者信息
     private $painter = [];
+    //画布大小
+    private $canvas_size = [];
 
     function __construct($addr, $port) {
 
@@ -105,14 +110,12 @@ class Server {
                     }
                 } else {
                     $bytes = socket_recv($socket, $buffer, 2048, 0);
-                    echo "message length:$bytes bytes\n";
                     if($bytes < 9) {
                         $this->disconnect($socket);
                         continue;
                     } else {
                         if($this->sockets[(int)$socket]['handshake']) {
                             $buffer = $this->decode($buffer);
-                            echo "get message: $buffer\n";
                             $this->analyseMsg($socket, $buffer);
                         } else {
                             echo "dohandshake\n";
@@ -125,16 +128,29 @@ class Server {
     }
 
     function analyseMsg($socket, $buffer) {
+        echo "\ngetMsg:$buffer";
         $buffer = json_decode($buffer);
         $data = isset($buffer->data) ? $buffer->data : null;
         $msg = (object)array();
         switch($buffer->type) {
         case REG_INF:
-            $this->sockets[(int)$socket]['userName'] = $data->name;
-            $this->sockets[(int)$socket]['userFace'] = $data->face;
-            $this->sockets[(int)$socket]['userState'] = 'register';
-            $msg->type = REG_RESULT;
-            $msg->data = "success";
+            $flag = true;
+            foreach($this->sockets as $tmp) {
+                if(@$tmp['userName'] == $data->name) {
+                   $flag = false;
+                    break;
+                }
+            }
+            if($flag) {
+                $this->sockets[(int)$socket]['userName'] = $data->name;
+                $this->sockets[(int)$socket]['userFace'] = $data->face;
+                $this->sockets[(int)$socket]['userState'] = 'register';
+                $msg->type = REG_RESULT;
+                $msg->data = "success";
+            } else {
+                $msg->type = REG_RESULT;
+                $msg->data = 'rename';
+            }
             $this->send($socket, $msg); 
             break;
         case NEWLINK:
@@ -150,22 +166,33 @@ class Server {
             $msg->type = GAME_START;
             if ($this->tryStart()) {
                 //初始化玩家成绩
-                $players = $this->getSockets('gaming'); 
-                foreach($players as $player) {
-                    $this->score[$player['userName']]['atime'] = 0;
-                    $this->scores[$player['userName']]['atime'] = 0;
-                    $this->scores[$player['userName']]['ptime'] = 0;
+                $this->players = $this->getSockets('gaming'); 
+                foreach($this->players as $player) {
+                    $this->score[$player['userName']] = 60;
+                    $this->scores[$player['userName']]['atime'] = 60 * ($this->userNum - 1) * 2;
+                    $this->scores[$player['userName']]['ptime'] = 60 * ($this->userNum - 1) * 2;
                 }
-                print_r($this->scores);
                 //初始化游戏信息
                 $msg->data = 1;
+                $this->canvas_size['width']  = $buffer->width;
+                $this->canvas_size['height'] = $buffer->height;
+                $this->round = 1;
                 $this->gameState = "gaming";
                 $this->gameTime = time();
                 $this->painter = $this->getUserInfo($socket);
                 $subjects = new Subject();
-                $this->userNum = count($this->getSockets('gaming'));
+                $this->userNum = count($this->players);
                 $this->subjects = $subjects->getArr(2 * $this->userNum);
                 $this->subject = array_pop($this->subjects);
+                echo "-------------游戏开始--------------\n";
+                echo "开始时间\t$this->gameTime\n";
+                echo "回合数  \t$this->round\n";
+                echo "绘画者  \t{$this->painter['userName']}\n";
+                echo "玩家数量\t$this->userNum\n";
+                echo "回合题目\t$this->subject\n";
+                print_r($this->sockets);
+                print_r($this->userOrder);
+                echo "------------------------------------\n";
                 $this->broadcast($msg);
             } else {
                 $msg->data = 0; 
@@ -177,22 +204,19 @@ class Server {
                 $name = $buffer->data->userName;
                 if ($buffer->data->msgValue == $this->subject) {
                     //记录成绩
-                    if ($this->score[$name][answer] == 0) {
-                        $this->score[$name][answer] = time() - $this->gameTime;
-                        $this->scores[$this->painter['userName']][painter] += time() - $this->gameTime;
+                    if ($this->score[$name] == 60) {
+                        $this->score[$name] = time() - $this->gameTime - 4;
+                        $this->scores[$name]['atime'] -= 56 - time() + $this->gameTime;
+                        $this->scores[$this->painter['userName']]['ptime'] -= 56 - time() + $this->gameTime;
                     }
                     //广播消息
+                    $msg = (object)[];
                     $msg->type  = MESSAGE;
+                    $msg->data = (object)[];
                     $msg->data->type = 3;
                     $msg->data->userName = $buffer->data->userName;
                     $this->broadcast($msg, 'all', 'gaming');
                     break;
-                } else {
-                    //记录成绩
-                    if (!array_key_exists($name)) {
-                        $this->score[$name][answer] = 60; 
-                        $this->scores[$this->painter['userName']][painter] += time() - $this->gameTime;
-                    }
                 }
             }
             $this->broadcast($buffer);
@@ -201,13 +225,37 @@ class Server {
             if (time() - $this->gameTime < 60) {
                 break;
             } else {
+                $score = [];
+                foreach($this->score as $key=>$val) {
+                    if($key == $this->painter['userName']) continue;
+                    $score[$key] = $val;
+                }
+                $score = (object)$score;
                 $msg = [
                     'type' => ANSWER,
-                    'data' => $this->subject
+                    'answer' => $this->subject,
+                    'score' => $score,
                 ];
-                $this->broadcast($msg, 'all', 'gaming');
-                $this->newRound($socket);
+                //判断是否应该结束游戏
+                if ($this->round == $this->userNum * 2) {
+                    $msg['gameOver'] = true;
+                    $msg['scores'] = $this->scores;
+                    $this->broadcast($msg, 'all', 'gaming');
+                    $this->gameOver();
+                } else {
+                    $msg['gameOver'] = false;
+                    $this->broadcast($msg, 'all', 'gaming');
+                    $this->newRound($socket);
+                }
             }
+            break;
+        case CANVAS_SIZE:
+            $this->canvas_size['width']  = $buffer->data->width;
+            $this->canvas_size['height'] = $buffer->data->height;
+            $msg = (object)[];
+            $msg->type = CANVAS_SIZE;
+            $msg->size = $this->canvas_size;
+            $this->broadcast($msg, 'answerer', 'gaimg');
             break;
         case START:
         case DRAWING:
@@ -242,6 +290,9 @@ class Server {
             } else if ($this->sockets[(int)$socket]['client'] == 'answerer') {
                 $msg->data = mb_strlen($this->subject);
                 $this->send($socket, $msg);
+                $msg->type = CANVAS_SIZE;
+                $msg->size = $this->canvas_size;
+                $this->send($socket, $msg);
             }
         }
     }
@@ -262,7 +313,7 @@ class Server {
         $this->userOrder = [];
         $this->userOrder[] = 0;
         foreach($this->sockets as $socket) {
-            if(@$socket['userOrder']) {
+            if(@($socket['userOrder'])) {
                 $this->userOrder[] = $socket['userOrder'];
             }
         }
@@ -326,37 +377,58 @@ class Server {
      * 结束游戏
      */
     function gameOver() {
-        print_r($this->score);
-        print_r($this->scores);
-        echo "gameover~!!!!!!!!\n\n";
+        $this->gameState = 'over';
+        foreach($this->sockets as $socket) {
+            if (@$socket['userState'] == 'gaming') {
+                $this->sockets[(int)$socket['socket']]['userState'] = 'register';
+                $this->sockets[(int)$socket['socket']]['client'] = 'unknow';
+            }
+            if (@$socket['state'] == 'offline') {
+                unset($this->sockets[(int)$socket['socket']]);
+            }
+        }
+        print_r($this->sockets);
     }
     /*
      * 开始新回合
      */
     function newRound($painter) {
+        echo "---------------回合结束-------------\n";
+        print_r($this->score);
+        print_r($this->scores);
+        echo "------------------------------------\n";
         $this->round ++;
-        //判断是否应该结束游戏
-        if ($this->round > $this->userNum * 2) {
-            $this->gameOver();
-            return;
-        }
         //更改玩家身份
         $this->sockets[(int)$painter]['client'] = 'answerer';
         $order = $this->sockets[(int)$painter]['userOrder'];
         $i = array_search($order, $this->userOrder);
         $i = $i == count($this->userOrder) - 1 ? 0 : $i + 1;
         $order = $this->userOrder[$i];
-
         foreach($this->sockets as $socket) {
             if($socket['socket'] == $this->master) continue;
             if($socket['userOrder'] == $order) {
+                //更新绘画者
+                $this->painter = $this->sockets[(int)$socket['socket']];
                 $this->sockets[(int)$socket['socket']]['client'] = 'painter';
                 break;
             }
         }
 
+        //置空分数
+        foreach($this->score as $key=>$score) {
+            $this->score[$key] = 60;
+        }
+
         $this->subject = array_pop($this->subjects);
         $this->gameTime = time() + 3;
+
+        echo "-------------游戏开始--------------\n";
+        echo "开始时间\t$this->gameTime\n";
+        echo "回合数  \t$this->round\n";
+        echo "绘画者  \t{$this->painter['userName']}\n";
+        echo "玩家数量\t$this->userNum\n";
+        echo "回合题目\t$this->subject\n";
+        echo "------------------------------------\n";
     }
     /*
      * 获取用户信息
@@ -501,12 +573,10 @@ class Server {
     function disconnect($socket) {
         $msg = (object)array();
         $this->sockets[(int)$socket]['state'] = "offline";
-        echo $this->sockets[(int)$socket]['userState']."\n";
         //准备状态掉线时将状态重置为已注册，避免占空座位。而游戏中状态不重置，以备重连。
         if($this->sockets[(int)$socket]['userState'] == 'ready') {
             $this->sockets[(int)$socket]['userState'] = 'register';
         }
-        echo $this->sockets[(int)$socket]['userState']."\n";
         $msg->type = USERS_INF;
         $msg->users = $this->getUserInfo();
         $this->broadcast($msg);
@@ -519,7 +589,6 @@ class Server {
      */
     function broadcast($data, $client="all", $userState='all') {
         $sockets = $this->sockets;
-        echo "$client, $userState\n";
         foreach ($this->sockets as $socket) {
             if($socket['socket'] == $this->master) continue;
             if($socket['state'] == 'offline') continue;
@@ -556,10 +625,9 @@ class Server {
         if(is_array($data) || is_object($data)) {
             $data= json_encode($data);
         }
-        echo "send: $data\n";
         $data= $this->encode($data);	
         socket_write($socket, $data, strlen($data));
     }
 }
-$ws = new Server('localhost', 4000);
+$ws = new Server('192.168.9.1', 4000);
 

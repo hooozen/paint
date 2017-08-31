@@ -24,6 +24,8 @@ class RegDialog extends Dialog {
         this.diaBody.appendChild(this.diaBodyBtn);
 
         this.regName(manager, user);
+        
+        this.wait = null;
     }
     regName(manager, user) {
         var This = this,
@@ -42,7 +44,7 @@ class RegDialog extends Dialog {
                 btn.style.bordercolor = "#eee";
                 msg.innerText = '';
                 btn.onclick = function() {
-                    This.waitFn();
+                    This.wait = This.waitFn();
                     var data = new Object();
                     data.name = name.value;
                     data.face = user.face;
@@ -53,7 +55,7 @@ class RegDialog extends Dialog {
         }
 
     }
-    waitFn() {
+    waitFn(clear) {
         var msg = $('reg-msg');
         var i = 0;
         var timer = setInterval(function() {
@@ -68,6 +70,13 @@ class RegDialog extends Dialog {
             }
             i++;
         }, 200);
+        return timer;
+    }
+    regFailed(msg) {
+        if(msg.data == 'rename') {
+            clearInterval(this.wait);
+            $('reg-msg').innerText = '昵称被占用';
+        }
     }
 }
 /*
@@ -120,7 +129,6 @@ class roomClient extends Client {
                     }
                     This.manager.sendData(MESSAGE, msg);
                 }
-                console.log(This.user);
                 This.user.order = this.ii;
                 This.user.state = 'ready';
                 This.btnChange(This.gameState);
@@ -165,7 +173,11 @@ class roomClient extends Client {
                         $('start').style = null;
                         $('start').onclick = function() {
                             This.user.type = 'master';
-                            manager.sendData(REQUEST_START);
+                            var msg = {
+                                cw: document.documentElement.clientWidth - 2,
+                                ch: document.documentElement.clientHeight - 224
+                            }
+                            manager.sendData(REQUEST_START, msg);
                         } 
                     }else {
                         $('start').value = '等待开始';
