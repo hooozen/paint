@@ -51,7 +51,7 @@ class msgBox {
  */
 class Manager {
     constructor(url) {
-        this.ws = new WebSocket('ws://192.168.9.1:4000');
+        this.ws = new WebSocket('ws://localhost:4000');
         this.ws.onclose = function() {
             alert("ws disconnect");
         }
@@ -60,6 +60,8 @@ class Manager {
         var msg = new Object();
         msg.type = type;
         msg.data = data;
+        console.log('send:');
+        console.log(msg);
         msg = JSON.stringify(msg);
         this.ws.send(msg);
     }
@@ -67,6 +69,8 @@ class Manager {
         this.ws.onmessage = function(event) {
             var msg = event.data;
             msg = JSON.parse(msg);
+            console.log('get:');
+            console.log(msg);
             switch (msg.type) {
                 case REG_RESULT:
                     if (msg.data === "success") {

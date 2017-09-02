@@ -51,8 +51,10 @@ class Server {
     private $gameState = "over";
     //当前回合数
     private $round = 1;
+    //游戏开始时间
+    private $startTime = 0;
     //当前回合开始时间戳
-    private $gameTime = null;
+    private $gameTime = 0;
     //当前玩家数量
     private $userNum = 2;
     //当前游戏中玩家信息
@@ -95,6 +97,10 @@ class Server {
             }
             $write = NULL;
             $except = NULL;
+
+            //由于服务器被动接收消息，在这里需要进行检测游戏是否由于玩家全部掉线而停滞
+            $this->stopDeath();
+            //阻塞
             socket_select($read, $write, $except, NULL);
 
             foreach ($read as $socket) {
@@ -127,6 +133,11 @@ class Server {
         }
     }
 
+    function stopDeath() {
+        if (time() - $this->startTime > 2 * 64 * $this->userNum) {
+            $this->gameOver();
+        }
+    }
     function analyseMsg($socket, $buffer) {
         echo "\ngetMsg:$buffer";
         $buffer = json_decode($buffer);
@@ -179,6 +190,7 @@ class Server {
                 $this->round = 1;
                 $this->gameState = "gaming";
                 $this->gameTime = time();
+                $this->startTime = $this->gameTime;
                 $this->painter = $this->getUserInfo($socket);
                 $subjects = new Subject();
                 $this->userNum = count($this->players);
@@ -237,6 +249,7 @@ class Server {
                     'score' => $score,
                 ];
                 //判断是否应该结束游戏
+                if ($this->gameState == 'over') break;
                 if ($this->round == $this->userNum * 2) {
                     $msg['gameOver'] = true;
                     $msg['scores'] = $this->scores;
@@ -377,6 +390,7 @@ class Server {
      * 结束游戏
      */
     function gameOver() {
+        if($this->gameState = 'over') return;
         $this->gameState = 'over';
         foreach($this->sockets as $socket) {
             if (@$socket['userState'] == 'gaming') {
@@ -388,6 +402,7 @@ class Server {
             }
         }
         print_r($this->sockets);
+        echo "\n-----------gameOver-------------\n";
     }
     /*
      * 开始新回合
@@ -399,8 +414,14 @@ class Server {
         echo "------------------------------------\n";
         $this->round ++;
         //更改玩家身份
-        $this->sockets[(int)$painter]['client'] = 'answerer';
-        $order = $this->sockets[(int)$painter]['userOrder'];
+        $order = 0;
+        foreach($this->sockets as $socket) {
+            if(isset($socket['client']) && $socket['client'] == 'painter') {
+                $this->sockets[(int)$socket['socket']]['client'] = 'answerer';
+               $order = $socket['userOrder']; 
+               break;
+            }
+        }
         $i = array_search($order, $this->userOrder);
         $i = $i == count($this->userOrder) - 1 ? 0 : $i + 1;
         $order = $this->userOrder[$i];
@@ -629,5 +650,5 @@ class Server {
         socket_write($socket, $data, strlen($data));
     }
 }
-$ws = new Server('192.168.9.1', 4000);
+$ws = new Server('localhost', 4000);
 

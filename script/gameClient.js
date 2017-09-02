@@ -86,8 +86,7 @@ class GameClient extends Client {
             if (leftTime <= 0) {
                 timerBox.innerText = '0';
                 clearInterval(timer);
-                if (This.type === 'painter')
-                    This.manager.sendData(GET_ANSWER);
+                This.manager.sendData(GET_ANSWER);
             }
         }, 500);
     }
