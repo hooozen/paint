@@ -1,0 +1,2 @@
+PHP Warning:  socket_connect(): unable to connect [111]: Connection refused in /var/www/html/paint/server/roundCtrl.php on line 10
+could not connect to server

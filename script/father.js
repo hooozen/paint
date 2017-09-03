@@ -55,6 +55,11 @@ class Manager {
         this.ws.onclose = function() {
             alert("ws disconnect");
         }
+        this.ws.onclose = this.reconnect;
+    }
+    reconnect() {
+        console.log('xx');
+        this.ws = new WebSocket('ws://localhost:4000');
     }
     sendData(type, data) {
         var msg = new Object();
@@ -112,6 +117,8 @@ class Manager {
                         client.showMsg(msg);
                     }
                     break;
+                case NEW_ROUND:
+                    client.newRound();
                 case CANVAS_SIZE:
                     client.diagram.setCanvasSize(msg.size.width, msg.size.height);
                     break;
@@ -345,27 +352,5 @@ class DiagramEdit {
     getColor() {
         return this.context.strokeStyle;
     }
-    /*
-    message (uname, umesg, right) {
-        var message = document.createElement('div');
-        message.className='message';
-        if(right) {
-            message.innerText = uname+"答对了!";
-            message.style.color = "red";
-        } else {
-            message.innerText=uname+":"+umesg;
-            message.style.color = "#aaa";
-        }
-        $('title').appendChild(message);
-        var right=0;
-        var timer = setInterval(function(){
-            if (right>=$('title').offsetWidth+5) {
-                clearInterval(timer);
-            }
-            right += 2;
-            message.style.right = right+"px";
-        },20);
-    }
-    */
 }
 

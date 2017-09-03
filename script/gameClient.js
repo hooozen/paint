@@ -34,15 +34,6 @@ class GameClient extends Client {
     setUsers(data) {
         var len = data.length;
         //根据用户座次排序
-        for(var i = 0; i<len; i++) {
-            for(var j = i+1; j<len; j++) {
-                if(data[i].order > data[j]) {
-                    var tmp = data[i];
-                    data[i] = data[j];
-                    data[j] = tmp;
-                }
-            }
-        }
         $('user-list').innerHTML = null;
         for(var i = 0; i<len; i++) {
             var oLi = document.createElement('li');
@@ -86,23 +77,20 @@ class GameClient extends Client {
             if (leftTime <= 0) {
                 timerBox.innerText = '0';
                 clearInterval(timer);
-                This.manager.sendData(GET_ANSWER);
             }
         }, 500);
     }
+    newRound() {
+        window.location.reload();
+    }
+    gameOver(msg) {
+        document.body.removeChild(getByCls('dialog')[0]);
+        var scoresDia = new overDialog();
+        scoresDia.showUp();
+        scoresDia.setMvp(msg.scores);
+    }
     roundOver(msg) {
-        if(msg.gameOver) {
-            var resDia = new resDialog(msg, true); 
-            $('gameover-btn').onclick = function() {
-                resDia.remove();
-                var scoresDia = new overDialog();
-                scoresDia.showUp();
-                scoresDia.setMvp(msg.scores);
-            }
-        } else {
-            var resDia = new resDialog(msg, false); 
-            setTimeout("location.reload()", 3000);
-        }
+        var resDia = new resDialog(msg, false); 
     }
 }
 class SubjectDia extends Dialog {

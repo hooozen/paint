@@ -156,6 +156,9 @@ class roomClient extends Client {
         }
         this.btnChange(this.gameState);
     }
+    gameOver() {
+        btnChange('over');
+    }
     btnChange(type) {
         var This = this,
             manager = this.manager;
