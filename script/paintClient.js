@@ -52,6 +52,7 @@ class PaintClient extends GameClient{
         this.type = 'painter';
         var width = document.documentElement.clientWidth - 2,
             height = document.documentElement.clientHeight - 224;
+        console.log('w:'+width+",h:"+height);
         this.diagram = new PaintCanvas(canvas, width, height, this.manager);
         this.init();
         this.setSize(width, height);
@@ -84,11 +85,11 @@ class PaintClient extends GameClient{
     requreStart(type) {
         this.manager.sendData(REQUEST_PAINT, type);
     }
-    startGame(msg) {
+    startGame(data, time) {
         var dialog = new SubjectDia("你画");
-        dialog.init(msg.data);
-        $('item').innerText = msg.data;
-        this.timer(msg.time);
+        dialog.init(data);
+        $('item').innerText = data;
+        this.timer(time);
     }
     paint(manager) {
         var manager = this.manager,

@@ -7,7 +7,7 @@ class msgBox {
     constructor(client) {
         this.inputBox = document.createElement('div');
         this.inputBox.id = 'input-box';
-        this.inputBox.innerHTML = "<input type = 'text' id = 'answer-input'><input type = 'button' id = 'send-message' value='发送'>";	
+        this.inputBox.innerHTML = "<input type = 'text' id = 'answer-input' maxlength = '8' placeholder='在这里发消息(1-8字)'><input type = 'button' id = 'send-message' value='发送'>";	
 
         this.show(client);
     }
@@ -25,18 +25,42 @@ class msgBox {
                 btn.style.color = "#e8e8e8";
                 btn.onclick = null;
             } else {
+
+                msg.value = msg.value.replace(/' '/g, '');
+
                 btn.style.background = "#61a6f9";
                 btn.style.color = "#fff";
+
+                var data = new Object();
+                data.type = 1;
+                data.userName = client.user.name;
+                data.msgValue = msg.value;
+
                 btn.onclick = function() {
-                    var data = new Object();
-                    data.type = 1;
-                    data.userName = client.user.name;
-                    data.msgValue = msg.value;
-                    manager.sendData(MESSAGE,data);
+                    if (client.type == 'answerer') {
+                        manager.sendData(GUESS_MESSAGE,data);
+                    } else {
+                        manager.sendData(MESSAGE,data);
+                    }
                     msg.value=null;
                     btn.onclick = null;
+                    document.onkeydown = null;
                     btn.style.background = "#abc6f9";
                     btn.style.color = "#e8e8e8";
+                }
+                document.onkeydown = function(event) {
+                    if(event.keyCode == '13') {
+                        if (client.type == 'answerer') {
+                            manager.sendData(GUESS_MESSAGE,data);
+                        } else {
+                            manager.sendData(MESSAGE,data);
+                        }
+                        msg.value=null;
+                        btn.onclick = null;
+                        document.onkeydown = null;
+                        btn.style.background = "#abc6f9";
+                        btn.style.color = "#e8e8e8";
+                    }
                 }
             }
 
@@ -51,31 +75,27 @@ class msgBox {
  */
 class Manager {
     constructor(url) {
-        this.ws = new WebSocket('ws://localhost:4000');
+        this.ws = new WebSocket('ws://192.168.9.9:4000');
         this.ws.onclose = function() {
-            alert("ws disconnect");
+            var disconnet = confirm("请不要挂机");
+            if (disconnet === true) {
+                window.location.reload();
+            }
         }
-        this.ws.onclose = this.reconnect;
-    }
-    reconnect() {
-        console.log('xx');
-        this.ws = new WebSocket('ws://localhost:4000');
     }
     sendData(type, data) {
         var msg = new Object();
         msg.type = type;
         msg.data = data;
-        console.log('send:');
-        console.log(msg);
         msg = JSON.stringify(msg);
+        console.log("send:"+msg);
         this.ws.send(msg);
     }
     getData(client) {
         this.ws.onmessage = function(event) {
             var msg = event.data;
+            console.log("get msg:"+msg);
             msg = JSON.parse(msg);
-            console.log('get:');
-            console.log(msg);
             switch (msg.type) {
                 case REG_RESULT:
                     if (msg.data === "success") {
@@ -118,12 +138,13 @@ class Manager {
                     }
                     break;
                 case NEW_ROUND:
-                    client.newRound();
+                    client.newRound(msg);
+                    break;
                 case CANVAS_SIZE:
                     client.diagram.setCanvasSize(msg.size.width, msg.size.height);
                     break;
                 case SUBJECT:
-                    client.startGame(msg);
+                    client.startGame(msg.data, msg.time);
                     break;
                 case ANSWER:
                     client.roundOver(msg);
@@ -254,7 +275,7 @@ class Client {
                 var content = '<span style="color: #db30e0">至少需要2人入座</span>';
                 break;
             case 3:
-                var content = '<span style="color: $db30e0">'+msg.userName+'猜对了!</span>';
+                var content = '<span style="color: #db30e0">'+msg.userName+'猜对了!</span>';
                 break;
             default:
                 break;
@@ -304,7 +325,7 @@ class Memento {
         var pic = new Image();
         pic.src = this.history[this.historyStep];
         pic.onload = function() {
-            context.drawImage(pic, 0, 0);
+            context.drawImage(pic, 0, 0, $('paint').width, $('paint').height);
         }
     }
     clear(canvas, context) {
@@ -333,6 +354,7 @@ class DiagramEdit {
         this.canvas.width = width;
         this.canvas.height = height;
         this.context.lineJoin = 'round';
+        this.clear();
     }
     setWidth(width = 1) {
         this.context.lineWidth = width;

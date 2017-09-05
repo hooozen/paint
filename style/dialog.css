@@ -24,6 +24,9 @@
 #dialog-title {
 	padding: 5px 0;
 }
+#dialog-body table td{
+    padding: 2px 4px;
+}
 #user-name {
 	background: none;
 	border: none;

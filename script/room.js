@@ -33,6 +33,7 @@ class RegDialog extends Dialog {
             msg = this.diaBodyMsg,
             name = this.diaBodyName;
         name.oninput = function() {
+            this.value = this.value.replace(/ /g, '');
             if(this.value === '' || this.value.length<1 || this.value.length>6) {
                 btn.style.color = "#888";
                 btn.style.bordercolor = "#888";
@@ -90,6 +91,8 @@ class RegDialog extends Dialog {
 class roomClient extends Client {
     constructor(manager) {
         super(manager);
+        console.log('xx');
+        this.type = 'room';
         this.regDialog = new RegDialog('请设置昵称', this.manager, this.user);
         this.inputBox = new msgBox(this);
         this.init();
@@ -157,7 +160,7 @@ class roomClient extends Client {
         this.btnChange(this.gameState);
     }
     gameOver() {
-        btnChange('over');
+        this.btnChange('over');
     }
     btnChange(type) {
         var This = this,

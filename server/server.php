@@ -19,6 +19,7 @@ require_once './ctrl.class.php';
 @define(ANSWER, 13);
 @define(NEW_ROUND, 14);
 @define(GAME_OVER, 15);
+@define(GUESS_MESSAGE, 16);
 @define(STYLE, 1001);
 @define(START, 1002);
 @define(DRAWING, 1003);
@@ -30,11 +31,13 @@ require_once './ctrl.class.php';
 @define(CANVAS_SIZE, 1009);
 class Subject {
     private $subjects = array(
-        '饼干', '笔记本', '矿泉水', '手机', '微软', '鼠标', '飞机', '程序员', '狗', '雪人', '蒙多',
-        '钓鱼岛', '扑克牌', '王炸', '鼠标垫', '机械键盘', '油烟机', '护士', '医生', '演员', '电影',
+        '饼干', '笔记本', '矿泉水', '手机', '微软', '鼠标', '飞机', '程序员', '狗', '雪人',
+        '钓鱼岛', '扑克牌', '王炸', '鼠标垫', '油烟机', '护士', '医生', '演员', '电影',
         '天使', '猴子', '齐天大圣', '定海神针', '白日做梦', '梦游', '僵尸', '杀手', '世界杯', '泾渭分明',
-        '望其项背', '鸡鸣狗盗', '中国梦', '蹦极', '鬼屋', '电影院', '狗头', '鳄鱼', '小鱼人', '武器',
-        '螃蟹', '螳螂', '教学楼', '宿舍楼', '华表', '天安门', '青蛙', '蝉', '厕所', '啤酒', '法拉利'
+        '望其项背', '鸡鸣狗盗', '中国梦', '蹦极', '鬼屋', '电影院', '鳄鱼', '武器',
+        '螃蟹', '螳螂', '教学楼', '宿舍楼', '天安门', '青蛙', '蝉', '厕所', '啤酒', '英语六级', '大话西游',
+        '篮球场', '酸奶', '大话西游', '笔记本', '挂科', '学霸', '学渣', '大闹天空', '天蓬元帅', '音乐',
+        '饮水机', '空调', '沙发', '安卓', '剃须刀', '吸尘器', '少林寺', '李白', '江湖'
     );
     function getArr($num) {
         $res = array();
@@ -55,8 +58,8 @@ class Server {
     private $sockets = array();
     //游戏状态 over: 结束 gaming: 游戏中
     private $gameState = "over";
-    //总回合数
-    private $rounds = 2;
+    //剩余回合数
+    private $rounds = 0;
     //当前回合数
     private $round = 1;
     //游戏开始时间
@@ -65,6 +68,8 @@ class Server {
     private $roundTime = 0;
     //当前玩家数量
     private $userNum = 2;
+    //回合答对题目者
+    private $winner = 0;
     //当前游戏中玩家信息
     private $players = [];
     //记录玩家座次
@@ -114,6 +119,7 @@ class Server {
                 $this->connect($client);
                 echo "A client have connected\n";
                 $key = array_search($this->master, $read);
+                unset($read[$key]);
             }
 
             foreach ($read as $socket) {
@@ -126,6 +132,10 @@ class Server {
                     if ($socket == $this->ctrl) {
                         $this->ctrlMesg($socket, $buffer);
                     } else if ($this->sockets[(int)$socket]['handshake']) {
+                        if(dechex(ord($buffer[0])) == 88) {
+                            $this->disconnect($socket);
+                            continue;
+                        }
                         $buffer = $this->decode($buffer);
                         $this->analyseMsg($socket, $buffer);
                     } else {
@@ -137,9 +147,19 @@ class Server {
         }
     }
     function ctrlMesg($socket, $msg) {
-        echo "\nctrl message: $msg\n";
         $msg = json_decode($msg);
         switch ($msg->type) {
+        case CTRL_INF:
+            $msg->data = [
+                'rounds' => $this->rounds,
+                'round'  => $this->round,
+                'sTime'  => $this->startTime,
+                'rTime'  => $this->roundTime,
+                'state'  => $this->gameState
+            ];
+            $msg = json_encode($msg);
+            socket_write($this->ctrl, $msg, strlen($msg));
+            break;
         case CTRL_ROUND_END:
             $this->endRound();
             break;
@@ -147,7 +167,6 @@ class Server {
             $this->newRound();
             break;
         case CTRL_GAME_OVER:
-            echo 'afasdsgaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
             $this->gameOver();
             break;
         default:
@@ -188,33 +207,30 @@ class Server {
         $this->gameState = 'gaming';
 
         $this->round ++;
+        $this->winner = 0;
         //更改玩家身份
-        print_r($this->sockets);
-        $this->updatePlayers();
-        print_r($this->players);
+        $this->setPlayers();
         for ($i = 0; $i < count($this->players); $i++) {
             if ($i == count($this->players) - 1) {
-                echo "$i {$this->players[$i]['client']}";
                 $this->sockets[(int)$this->players[0]['socket']]['client']  = 'painter';
                 $this->players[0]['client'] = 'painter';
+                $this->painter = $this->players[0];
                 $this->sockets[(int)$this->players[$i]['socket']]['client'] = 'answerer';
                 $this->players[$i]['client'] = 'answerer';
-                print_r($this->players);
                 break;
             }
             if ($this->players[$i]['client'] === 'painter') {
-                echo "$i {$this->players[$i]['client']}";
                 $this->sockets[(int)$this->players[$i+1]['socket']]['client'] = 'painter';
                 $this->players[$i+1]['client'] = 'painter';
+                $this->painter = $this->players[$i+1];
                 $this->sockets[(int)$this->players[$i]['socket']]['client']   = 'answerer';
                 $this->players[$i]['client'] = 'answerer';
-                print_r($this->players);
                 break;
             }
         }
-        print_r($this->players);
-        $this->updatePlayers();
-        print_r($this->sockets);
+        //设置回合绘画者完成回合数 +1
+        $this->sockets[(int)$this->painter['socket']]['completeRounds'] += 1;
+        $this->setPlayers();
 
         //置空回合分数
         foreach($this->score as $key=>$score) {
@@ -222,6 +238,7 @@ class Server {
         }
         //更新题目
         $this->subject = array_pop($this->subjects);
+        //更新回合时间
         $this->roundTime = time();
 
         echo "-------------回合开始--------------\n";
@@ -234,9 +251,22 @@ class Server {
 
         //广播新回合
         $msg = [
-            'type' => NEW_ROUND
+            'type' => NEW_ROUND,
+            'users' => $this->getUserInfo(),
+            'time' => $this->roundTime,
         ];
-        $this->broadcast($msg, 'all', 'gaming');
+
+        foreach ($this->players as $player) {
+            $msg['client'] = $player['client'];
+            if ($player['client'] === 'painter') {
+                $msg['subject'] = $this->subject;
+                $msg['canSize'] = false;
+            } else {
+                $msg['subject'] = mb_strlen($this->subject, 'utf-8');
+                $msg['canSize'] = $this->canvas_size;
+            }
+            $this->send($player['socket'], $msg);
+        }
     }
 
     /*
@@ -269,33 +299,60 @@ class Server {
         }
     }
     /*
-     * 更新玩家数组并排序
+     * 获取玩家信息
+     * $reset 是否重置玩家信息
      */
-    function updatePlayers() {
-        $this->players = $this->getSockets('gaming'); 
+    function setPlayers($reset = false) {
+        $this->players = [];
+        $completeRounds = 0;
+        foreach ($this->sockets as $socket) {
+            //获取所有在线玩家以及掉线的绘画者
+            if ((@$socket['client'] === 'answerer' && @$socket['state'] !== 'offline') || @$socket['client'] === 'painter') {
+                if ($reset) {
+                    @$this->sockets[(int)$socket['socket']]['completeRounds'] = 0;
+                }
+                $this->players[] = $this->sockets[(int)$socket['socket']];
+                $completeRounds += $this->sockets[(int)$socket['socket']]['completeRounds'];
+            }
+        }
         usort($this->players, function($a, $b) {
             $a = $a['userOrder'];
             $b = $b['userOrder'];
             return $a > $b ? 1 : -1;
         });
+        //更新玩家数和剩余回合数
+        $this->userNum = count($this->players);
+        $this->rounds = $this->userNum * 2 - $completeRounds;
+        echo "总玩家数：$this->userNum ，剩余回合数：$this->rounds \n";
     }
 
     function gameStart($socket) {
-        //初始化玩家成绩
-        $this->updatePlayers();
-        foreach($this->players as $player) {
-            $this->score[$player['userName']] = 60;
-            $this->scores[$player['userName']]['atime'] = 60 * ($this->userNum - 1) * 2;
-            $this->scores[$player['userName']]['ptime'] = 60 * ($this->userNum - 1) * 2;
-        }
         //初始化游戏信息
-        $this->userNum = count($this->players); 
-        $this->round = 1;
-        $this->rounds = 2 * $this->userNum;
-        $this->gameState = "gaming";
-        $this->startTime = time();
-        $this->roundTime = $this->startTime;
+        //设置绘画者
         $this->painter = $this->getUserInfo($socket);
+        //充值玩家信息
+        $this->setPlayers(true);
+        //设置绘画者完成回合为1
+        $this->sockets[(int)$socket]['completeRounds'] = 1;
+        $this->players[0]['completeRounds'] = 1;
+        //初始化玩家成绩
+        $this->socre = null;
+        $this->socres = null;
+        foreach($this->players as $player) {
+           $this->score[$player['userName']] = 60;
+            $this->scores[$player['userName']]['atime'] = 60 * ($this->userNum - 1) * 2;
+            $this->scores[$player['userName']]['ptime'] = 60 * 2;
+            $this->scores['length'] = $this->userNum;
+        }
+
+        //设置当前回合数
+        $this->round = 1;
+        //设置游戏状态
+        $this->gameState = "gaming";
+        //设置游戏开始时间
+        $this->startTime = time();
+        //设置回合开始时间
+        $this->roundTime = $this->startTime;
         //初始化题库
         $subjects = new Subject();
         $this->subjects = $subjects->getArr(2 * $this->userNum);
@@ -307,7 +364,6 @@ class Server {
         echo "绘画者  \t{$this->painter['userName']}\n";
         echo "玩家数量\t$this->userNum\n";
         echo "回合题目\t$this->subject\n";
-        print_r($this->sockets);
         echo "------------------------------------\n";
         //发布游戏开始信息
         $msg = [
@@ -318,15 +374,17 @@ class Server {
 
         $msg['data'] = [
             'rounds' => $this->rounds,
-            'round' => $this->round,
+            'round'  => $this->round,
             'sTime'  => $this->startTime,
-            'rTime' => $this->roundTime
+            'rTime'  => $this->roundTime,
+            'state'  => $this->gameState
         ];
         $msg = json_encode($msg);
         socket_write($this->ctrl, $msg, strlen($msg));
     }
 
     function analyseMsg($socket, $buffer) {
+        echo "$buffer\n";
         $buffer = json_decode($buffer);
         $data = isset($buffer->data) ? $buffer->data : null;
         $msg = (object)array();
@@ -369,27 +427,40 @@ class Server {
                 $this->send($socket, $msg);
             }
             break;
-        case MESSAGE:
-            if ($this->gameState == 'gaming') {
-                $name = $buffer->data->userName;
-                if ($buffer->data->msgValue == $this->subject) {
-                    //记录成绩
-                    if ($this->score[$name] == 60) {
-                        $this->score[$name] = time() - $this->roundTime - 4;
-                        $this->scores[$name]['atime'] -= 56 - time() + $this->roundTime;
-                        $this->scores[$this->painter['userName']]['ptime'] -= 56 - time() + $this->roundTime;
-                    }
-                    //广播消息
-                    $msg = (object)[];
-                    $msg->type  = MESSAGE;
-                    $msg->data = (object)[];
-                    $msg->data->type = 3;
-                    $msg->data->userName = $buffer->data->userName;
-                    $this->broadcast($msg, 'all', 'gaming');
-                    break;
-                }
+        //答题消息
+        case GUESS_MESSAGE:
+            if ($this->gameState != 'gaming') {
+                break;
             }
-            $this->broadcast($buffer);
+            $name = $buffer->data->userName;
+            //判断是否答对
+            if ($buffer->data->msgValue == $this->subject) {
+                if ($this->score[$name] == 60) {
+                    $this->winner ++;
+                    echo "--------------Round{$this->round} {$name}第{$this->winner}个猜对答案------------------\n";
+                    $duration = time() - $this->roundTime;
+                    $this->score[$name] = $duration - 4;
+                    $this->scores[$name]['atime'] -= 64 - $duration;
+                    if ($this->winner === 1) {
+                        $this->scores[$this->painter['userName']]['ptime'] -= 64 - $duration;
+                    }
+                    if ($this->winner == $this->userNum - 1) {
+                        $this->endRound();
+                    }
+                }
+                $msg = (object)[];
+                $msg->type  = MESSAGE;
+                $msg->data = (object)[];
+                $msg->data->type = 3;
+                $msg->data->userName = $buffer->data->userName;
+                $this->broadcast($msg, 'all', 'gaming');
+            } else {
+                $buffer->type = MESSAGE;
+                $this->broadcast($buffer, 'all', 'gaming');
+            }
+            break;
+        case MESSAGE:
+            $this->broadcast($buffer, 'unknow');
             break;
         case CANVAS_SIZE:
             $this->canvas_size['width']  = $buffer->data->width;
@@ -415,7 +486,11 @@ class Server {
         $msg->type = GAME_INF;
         $msg->state = $this->gameState;
         $msg->users = $this->getUserInfo();
+        $msg->time  = $this->startTime;
         $this->broadcast($msg);
+        if ($this->sockets[(int)$socket]['userState'] === 'gaming') {
+            $this->setPlayers();
+        }
         //再分别发送客户端类型
         $msg->type = CLIENT;
         unset($msg->state);
@@ -430,7 +505,7 @@ class Server {
                 $msg->data = $this->subject;
                 $this->send($socket, $msg);
             } else if ($this->sockets[(int)$socket]['client'] == 'answerer') {
-                $msg->data = mb_strlen($this->subject);
+                $msg->data = mb_strlen($this->subject, 'utf-8');
                 $this->send($socket, $msg);
                 $msg->type = CANVAS_SIZE;
                 $msg->size = $this->canvas_size;
@@ -461,7 +536,7 @@ class Server {
         $res = array();
         if($state == 'all') {
             foreach($this->sockets as $socket) {
-                if($socket['type'] == 'master') continue;
+                if($socket['socket'] == $this->master || $socket['socket'] == $this->ctrl) continue;
                 if($socket['state'] == 'offline') continue;
                 $res[] = $socket;
             }
@@ -469,7 +544,7 @@ class Server {
         } else {
             foreach($this->sockets as $socket) {
                 if($socket['type'] == 'master' || $socket['socket'] == $this->ctrl) continue;
-                if($socket['state'] == 'offline') continue;
+                if($socket['state'] == 'offline' && $socket['client'] == ['answerer']) continue;
                 if($socket['userState'] == $state) {
                     $res[] = $socket;
                 }
@@ -506,15 +581,14 @@ class Server {
         //重置玩家状态
         foreach($this->sockets as $socket) {
             if ($socket['socket'] == $this->master || $socket['socket'] == $this->ctrl) continue;
-            if ($socket['userState'] != 'gaming' || $socket['client'] != 'unkown' ) {
-                $this->sockets[(int)$socket['socket']]['client'] = 'unknow';
+            $this->sockets[(int)$socket['socket']]['client'] = 'unknow';
+            if ($socket['userState'] == 'gaming') {
                 $this->sockets[(int)$socket['socket']]['userState'] = 'register';
             }
-            if ($socket['state'] != 'online') {
+            if ($socket['state'] == 'offline') {
                 unset($this->sockets[(int)$socket['socket']]);
             }
         }
-        print_r($this->sockets);
         echo "\n-----------gameOver-------------\n";
     }
     /*
@@ -536,6 +610,11 @@ class Server {
                     $i++;
                 }
             }	
+            usort($res, function($a, $b) {
+                $a = $a['order'];
+                $b = $b['order'];
+                return $a - $b;
+            });
         } else {
             $socketInfo = $this->sockets[(int)$socket];
             foreach($socketInfo as $key=>$value) {
@@ -626,8 +705,10 @@ class Server {
             $session = $match[1];
             $this->checkSession($socket, $session);
             $this->sockets[(int)$socket]['session'] = $session;
+        } else {
+            $this->responseLink($socket, true);
         }
-        echo "--------------客户端已连接-------------";
+        echo "--------------玩家已连接-------------\n";
     }
     /*
      * 对比$socket客户端和已有连接的phpsession值，判断是否为重连socket，以应对较差的客户端网络环境
@@ -640,7 +721,7 @@ class Server {
             if(@$element['session'] == $session) {
                 echo "one client have reclient\n";
                 foreach($element as $key=>$value) {
-                    if($key=='userName' || $key=='userFace' || $key=='userOrder' || $key=='userState' || $key=='client')
+                    if($key=='userName' || $key=='userFace' || $key=='userOrder' || $key=='userState' || $key=='client' || $key=='completeRounds')
                         $this->sockets[(int)$socket][$key] = $value;
                 }
                 unset($this->sockets[(int)$element['socket']]);
@@ -664,14 +745,10 @@ class Server {
         }
         $this->send($socket, $msg);
     }
-    function recoveryInf($socket) {
-
-    }
     /*
      * 客户端断开websocket连接时调用, 改变连接状态和玩家状态，以备重连
      */
     function disconnect($socket) {
-        var_dump($socket);
         if (@$socket == $this->ctrl) {
             unset($this->sockets['ctrl']);
             die('-------------------控制器断开----------------\n');
@@ -679,12 +756,16 @@ class Server {
         $msg = (object)array();
         $this->sockets[(int)$socket]['state'] = "offline";
         //准备状态掉线时将状态重置为已注册，避免占空座位。而游戏中状态不重置，以备重连。
-        if($this->sockets[(int)$socket]['userState'] == 'ready') {
+        if ($this->sockets[(int)$socket]['userState'] === 'ready') {
             $this->sockets[(int)$socket]['userState'] = 'register';
+        } else if ($this->sockets[(int)$socket]['userState'] === 'gaming') {
+            $this->setPlayers();
         }
         $msg->type = USERS_INF;
         $msg->users = $this->getUserInfo();
         $this->broadcast($msg);
+        $msg->data = (object)[];
+        $msg->data->type = 4;
         echo "one client have disconnect\n";
     }
     /*

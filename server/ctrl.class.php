@@ -6,77 +6,115 @@
 @define(GAME_START, 9);
 
 class RoundCtrl {
+
+    private $socket = null;
+
+    private $sTime  = 0;
+    private $rTime  = 0;
+    private $round  = 0;
+    private $rounds = 0;
+    private $state  = 'over';
+
+    private $CtrlKey = "Ctrl-Key: 3be8e5f22f9a063b11065be898d74807\r\n";
+    private $ctrlInf = ['type' => CTRL_INF];
+
+
     function __construct($host, $port) {
 
-        $socket = socket_create(AF_INET, SOCK_STREAM, 0)
+        $this->socket = socket_create(AF_INET, SOCK_STREAM, 0)
             or die("could not create socket\n");
-        $result = socket_connect($socket, $host, $port)
+        $result = socket_connect($this->socket, $host, $port)
             or die("could not connect to server\n");
 
-        $CtrlKey = "Ctrl-Key: 3be8e5f22f9a063b11065be898d74807\r\n";
-        socket_write($socket, $CtrlKey, strlen($CtrlKey));
+        socket_write($this->socket, $this->CtrlKey, strlen($this->CtrlKey));
 
-        $ctrlInf = [
-            'type' => CTRL_INF
-        ];
-        $flag = true;
 
         while (true) {
-            $msg = $this->read($socket);
-            if ($msg->type == GAME_START) {
-                $this->gameStart($socket, $msg);
+            $msg = $this->read();
+            switch ($msg->type) {
+            case GAME_START:
+                $this->gameStart($msg);
+                break;
+            default:
+                break;
             }
         }
     }
 
-    function gameStart($socket, $msg) {
+    function gameStart($msg) {
         echo "gameStart\n";
 
-        $sTime  = $msg->data->sTime;
-        $rTime  = $msg->data->rTime;
-        $round  = $msg->data->round;
-        $rounds = $msg->data->rounds;
+        $this->round  = $msg->data->round;
+        $this->rounds = $msg->data->rounds;
+        $this->state  = 'gaming';
 
-        while ($round < $rounds) {
-            sleep(63 - (time() - $rTime));
-            $msg->type = CTRL_ROUND_END;
-            $this->send($socket, $msg);
-            echo "round $round over\n";
-            sleep(3);
-            $round ++;
-            $rTime = time();
-            $msg->type = CTRL_ROUND_START;
-            $this->send($socket, $msg);
-            echo "round $round start\n";
-        }
-        if ($round === $rounds) {
-            $msg->type = CTRL_ROUND_END;
-            $this->send($socket, $msg);
-            echo "round $round over\n";
-            sleep(3);
-            $msg->type = CTRL_GAME_OVER;
-            $this->send($socket, $msg);
-            echo "game over\n";
+        $info = [];
+
+        while ($this->state != 'over') {
+
+            $this->sTime  = $msg->data->sTime;
+            $this->rTime  = $msg->data->rTime;
+            $this->round  = $msg->data->round;
+            $this->rounds = $msg->data->rounds;
+            $this->state  = $msg->data->state;
+
+            if($this->state === 'roundOver') {
+                sleep(3);
+                if($this->rounds == 0) {
+                    $info['type'] = CTRL_GAME_OVER;
+                    $this->send($info);
+                    echo "game over\n";
+                    break;
+                } else {
+                    $info['type'] = CTRL_ROUND_START;
+                    $this->send($info);
+                    echo "round $this->round start\n";
+                }
+            }
+
+
+            if (time() - $this->rTime >= 63) {
+
+                $info['type'] = CTRL_ROUND_END;
+                $this->send($info);
+                echo "round$this->round over\n";
+
+                sleep(3);
+
+                if($this->rounds == 0) {
+                    $info['type'] = CTRL_GAME_OVER;
+                    $this->send($info);
+                    echo "game over\n";
+                    break;
+                } else {
+                    $info['type'] = CTRL_ROUND_START;
+                    $this->send($info);
+                    echo "round".($this->round+1)." start\n";
+                }
+            }
+
+            usleep(300000);
+
+            //从父进程更新游戏信息
+            $this->send($this->ctrlInf);
+            $msg = $this->read();
+
         }
     }
 
-    function analyseMsg($socket, $msg) {
+    function analyseMsg($msg) {
         switch ($msg->type) {
         default:
         break;
         }
     }
 
-    function send($socket, $msg) {
+    function send($msg) {
         $msg = json_encode($msg);
-        $res = socket_write($socket, $msg, strlen($msg));
-        if($res == 0) {
-            echo "xxx";
-        }
+        $res = socket_write($this->socket, $msg, strlen($msg));
     }
-    function read($socket) {
-        $msg = socket_recv($socket, $buffer, 2048, 0);
-        echo "getMsg: $buffer";
+    function read() {
+        $msg = socket_recv($this->socket, $buffer, 2048, 0);
         if ($msg == "") {
             die('conncection false\n');
         }

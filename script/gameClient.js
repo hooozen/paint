@@ -15,11 +15,13 @@ class GameClient extends Client {
         if(client === 'painter') {
             this.showPanel();
             var client = new PaintClient(this.manager, this.canvas);
+            this.client = client;
             client.user = this.user;
             this.manager.getData(client);
         } else if (client === 'answerer') {
             this.removePanel();
             var client = new ShowClient(this.manager, this.canvas);
+            this.client = client;
             client.user = this.user;
             this.manager.getData(client);
         } else {
@@ -33,7 +35,6 @@ class GameClient extends Client {
     }
     setUsers(data) {
         var len = data.length;
-        //根据用户座次排序
         $('user-list').innerHTML = null;
         for(var i = 0; i<len; i++) {
             var oLi = document.createElement('li');
@@ -41,7 +42,11 @@ class GameClient extends Client {
                 posX = face%5*40,
                 posY = Math.floor(face/5)*40,
                 imgPos = posX + "px " + posY + "px";
-            oLi.innerHTML= '<div class="score"></div><div class="uface" style="background-position:' + imgPos + '"></div><div class="unmae">'+data[i].name+'</div>';
+            if (data[i].state === 'offline') {
+            oLi.innerHTML = '<div class="score"></div><div class="uface" style="background-position:' + imgPos + '"><div class="offline">掉线</div></div><div class="unmae">'+data[i].name+'</div>';
+            } else {
+            oLi.innerHTML = '<div class="score"></div><div class="uface" style="background-position:' + imgPos + '"></div><div class="unmae">'+data[i].name+'</div>';
+            }
             $('user-list').appendChild(oLi);
             if(data[i].type == 'painter') {
                 var paint = document.createElement("div");
@@ -80,17 +85,28 @@ class GameClient extends Client {
             }
         }, 500);
     }
-    newRound() {
+    newRound(msg) {
         window.location.reload();
+        /*
+        document.body.removeChild(getByCls('dialog')[0]);
+        document.body.removeChild($('bg-black'));
+        this.setClient(msg.client);
+        if(msg.canSize) {
+            this.client.diagram.setCanvasSize(msg.canSize.width, msg.canSize.height);
+        }
+        this.setUsers(msg.users);
+        this.client.startGame(msg.subject, msg.time);
+        */
     }
     gameOver(msg) {
         document.body.removeChild(getByCls('dialog')[0]);
+        document.body.removeChild($('bg-black'));
         var scoresDia = new overDialog();
         scoresDia.showUp();
         scoresDia.setMvp(msg.scores);
     }
     roundOver(msg) {
-        var resDia = new resDialog(msg, false); 
+        var resDia = new resDialog(msg); 
     }
 }
 class SubjectDia extends Dialog {
@@ -122,7 +138,7 @@ class SubjectDia extends Dialog {
 }
 
 class resDialog extends Dialog {
-    constructor(result, over) {
+    constructor(result) {
         super('答案');
         this.answer = '<div style="font-size: 25px">' + result.answer + '</div>';
         this.score = '<table class = "round-score"><tr><td>姓名</td><td>用时</td></tr>'
@@ -130,11 +146,7 @@ class resDialog extends Dialog {
         for (var item in result.score) {
             score += '<tr><td>' + item + '</td><td>' + result.score[item] + 's</td></tr>';
         }
-        if(over) {
-            this.score += score + '</table><input type="button" id="gameover-btn" value="游戏结束">';
-        } else {
-            this.score += score + '</table>';
-        }
+        this.score += score + '</table>';
         this.diaBody.innerHTML = this.answer + this.score;
         this.showUp();
     }
@@ -170,7 +182,7 @@ class overDialog extends Dialog {
                 answerer.atime = result[i].atime;
             }
         }
-        this.resultTb.innerHTML = '<tr><td>称号</td><td>姓名</td><td>总耗时</td></tr><tr><td>神乎其技</td><td>'+painter.name+'</td><td>'+painter.ptime+'s</td></tr><tr><td>洞察之眼</td><td>'+answerer.name+'</td><td>'+answerer.atime+'s</td></tr>';
+        this.resultTb.innerHTML = '<tr><td>称号</td><td>姓名</td><td>平均耗时</td></tr><tr><td>神乎其技</td><td>'+painter.name+'</td><td>'+Math.floor(painter.ptime/result.length)+'s</td></tr><tr><td>洞察之眼</td><td>'+answerer.name+'</td><td>'+Math.floor(answerer.atime/2)+'s</td></tr>';
         this.overBtn.onclick = function() {
             window.location = './gameRoom.php';
         }

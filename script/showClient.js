@@ -32,13 +32,14 @@ class ShowCanvas extends DiagramEdit {
 class ShowClient extends GameClient {
     constructor(manager, canvas) {
         super(manager, canvas);
+        this.type = 'answerer';
         this.diagram = new ShowCanvas(canvas, document.documentElement.clientWidth - 2, document.documentElement.clientHeight - 182, manager);
         this.inputBox = new msgBox(this);
     }
-    startGame(msg) {
+    startGame(data, time) {
         var dialog = new SubjectDia("提示");
-        dialog.init(msg.data+"个字");
-        $('item').innerText = msg.data + "个字";
-        this.timer(msg.time);
+        dialog.init(data+"个字");
+        $('item').innerText = data + "个字";
+        this.timer(time);
     }
 }

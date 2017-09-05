@@ -85,6 +85,9 @@ footer {
 	font-size: 10px;
 	text-align: center;
 }
+footer a {
+    color: #ccc;
+}
 .name {
 	color: #888;
 	height: 20px;
@@ -153,7 +156,7 @@ footer {
 			<input id='start' type = 'button' value='请入座'>
 		</div>
 		<footer>
-			长大版你画我猜<br>2017软件系软件体系结构课程设计-Hozen@live.com
+			长大版你画我猜<br><a href="http://hozen.site/blog/">About | </a><a href="http://hozen.site">Blog | </a><a href="mailto:hozen@live.com">Email</a>
 		</footer>
 	</body>
 	<script type="text/javascript" src = "./script/common.js"></script>
