@@ -75,7 +75,7 @@ class msgBox {
  */
 class Manager {
     constructor(url) {
-        this.ws = new WebSocket('ws://192.168.9.1:4000');
+        this.ws = new WebSocket('ws://192.168.9.9:4000');
         this.ws.onclose = function() {
             var disconnet = confirm("请不要挂机");
             if (disconnet === true) {
