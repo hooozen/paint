@@ -184,7 +184,7 @@ class overDialog extends Dialog {
         }
         this.resultTb.innerHTML = '<tr><td>称号</td><td>姓名</td><td>平均耗时</td></tr><tr><td>神乎其技</td><td>'+painter.name+'</td><td>'+Math.floor(painter.ptime/result.length)+'s</td></tr><tr><td>洞察之眼</td><td>'+answerer.name+'</td><td>'+Math.floor(answerer.atime/2)+'s</td></tr>';
         this.overBtn.onclick = function() {
-            window.location = './gameRoom.php';
+            window.location = './index.php';
         }
     }
 }

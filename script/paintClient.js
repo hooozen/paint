@@ -50,8 +50,8 @@ class PaintClient extends GameClient{
     constructor(manager, canvas) {
         super(manager, canvas);
         this.type = 'painter';
-        var width = document.documentElement.clientWidth - 2,
-            height = document.documentElement.clientHeight - 224;
+        var width = document.body.offsetWidth - 2,
+            height = document.body.offsetHeight - 224;
         console.log('w:'+width+",h:"+height);
         this.diagram = new PaintCanvas(canvas, width, height, this.manager);
         this.init();
