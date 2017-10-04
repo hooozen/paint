@@ -32,8 +32,9 @@ class ShowCanvas extends DiagramEdit {
 class ShowClient extends GameClient {
     constructor(manager, canvas) {
         super(manager, canvas);
+        var body = document.getElementById('body-wrap');
         this.type = 'answerer';
-        this.diagram = new ShowCanvas(canvas, document.documentElement.clientWidth - 2, document.documentElement.clientHeight - 182, manager);
+        this.diagram = new ShowCanvas(canvas, body.offsetWidth- 2, body.offsetHeight- 182, manager);
         this.inputBox = new msgBox(this);
     }
     startGame(data, time) {

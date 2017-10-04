@@ -16,7 +16,6 @@ html,body,div {
 	padding: 0;
 }
 body, html{
-	background: #fff;
 	padding-bottom: 25px;
 }
 a {
@@ -108,6 +107,7 @@ footer a {
 		</style>
 	</head>
 	<body>
+    <div id="body-wrap">
 		<header class="face">
 			<div class="title">
 				你 画 我 猜
@@ -158,6 +158,7 @@ footer a {
 		<footer>
 			长大版你画我猜<br><a href="http://hozen.site/blog/">About | </a><a href="http://hozen.site">Blog | </a><a href="mailto:hozen@live.com">Email</a>
 		</footer>
+    </div>
 	</body>
 	<script type="text/javascript" src = "./script/common.js"></script>
 	<script type="text/javascript" src = "./script/father.js"></script>

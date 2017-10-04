@@ -91,7 +91,6 @@ class RegDialog extends Dialog {
 class roomClient extends Client {
     constructor(manager) {
         super(manager);
-        console.log('xx');
         this.type = 'room';
         this.regDialog = new RegDialog('请设置昵称', this.manager, this.user);
         this.inputBox = new msgBox(this);

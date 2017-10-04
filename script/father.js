@@ -77,7 +77,7 @@ class Manager {
     constructor(url) {
         this.ws = new WebSocket('ws://'+ wsHost + ':' +  wsPort);
         this.ws.onclose = function() {
-            var disconnet = confirm("请不要挂机");
+            var disconnet = confirm("连接异常，重新连接?");
             if (disconnet === true) {
                 window.location.reload();
             }

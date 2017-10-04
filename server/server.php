@@ -122,6 +122,8 @@ class Server {
                 unset($read[$key]);
             }
 
+            $this->clearOfflineClient();
+
             foreach ($read as $socket) {
                 if ($socket === $this->master) continue;
                 $bytes = socket_recv($socket, $buffer, 2048, 0);
@@ -143,6 +145,16 @@ class Server {
                         $this->handShake($socket, $buffer);
                     }
                 }
+            }
+        }
+    }
+    function clearOfflineClient() {
+        foreach ($this->sockets as $socket) {
+            if (@$socket['state'] != 'offline') {
+                continue;
+            }
+            if (time() - $socket['cutTime'] > 300) {
+                unset ($this->sockets[(int)$socket['socket']]);
             }
         }
     }
@@ -755,6 +767,7 @@ class Server {
         }
         $msg = (object)array();
         $this->sockets[(int)$socket]['state'] = "offline";
+        $this->sockets[(int)$socket]['cutTime'] = time();
         //准备状态掉线时将状态重置为已注册，避免占空座位。而游戏中状态不重置，以备重连。
         if ($this->sockets[(int)$socket]['userState'] === 'ready') {
             $this->sockets[(int)$socket]['userState'] = 'register';

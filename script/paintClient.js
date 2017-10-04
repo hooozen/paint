@@ -50,8 +50,8 @@ class PaintClient extends GameClient{
     constructor(manager, canvas) {
         super(manager, canvas);
         this.type = 'painter';
-        var width = document.body.offsetWidth - 2,
-            height = document.body.offsetHeight - 224;
+        var width = $('body-wrap').offsetWidth - 2,
+            height = $('body-wrap').offsetHeight - 224;
         console.log('w:'+width+",h:"+height);
         this.diagram = new PaintCanvas(canvas, width, height, this.manager);
         this.init();
@@ -73,9 +73,10 @@ class PaintClient extends GameClient{
         this.manager.sendData(CANVAS_SIZE, data)
     }
     setX(event) {
-        var event = event || window.event;
+        var event = event || window.event,
+            body = document.getElementById('body-wrap');
         var cx = event.clientX || event.touches[0].pageX;
-        return cx - 2;
+        return cx - 2 - body.offsetLeft;
     }
     setY(event) {
         var event = event || window.event;
@@ -94,7 +95,7 @@ class PaintClient extends GameClient{
     paint(manager) {
         var manager = this.manager,
             diagram = this.diagram,
-            canvas = this.canvas,
+            canvas  = this.canvas,
             This = this,
             mousePressed = false;
         canvas.onmousedown = function(event) {

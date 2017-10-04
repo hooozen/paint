@@ -25,7 +25,7 @@ class GameClient extends Client {
             client.user = this.user;
             this.manager.getData(client);
         } else {
-            window.location = 'gameRoom.php';
+            window.location = 'index.php';
         }
 
     }
@@ -67,7 +67,7 @@ class GameClient extends Client {
     }
     removePanel() {
       if($('tool-bar')) {
-            document.body.removeChild($('tool-bar'));
+            $('body-wrap').removeChild($('tool-bar'));
         };
     }
     timer(time) {

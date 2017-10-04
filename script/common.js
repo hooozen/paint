@@ -36,12 +36,12 @@ var wsHost = "192.168.9.1",
     }
     var ua = window.navigator.userAgent;
     if (ua.match(/(w|Windows)|(l|Linux)/) && screen.availWidth > 500) {
-        var maxH = window.innerHeight - 25;
+        var wrap = document.getElementById('body-wrap'),
+            maxH = window.innerHeight - 25;
         document.documentElement.style.minHeight = "600px";
         document.documentElement.style.height = maxH + "px";
-        document.documentElement.style.backgroundColor = "#666";
-        document.body.style.width = maxH / 16 * 9 + "px";
-        document.body.style.margin = "0 auto";
+        document.body.style.backgroundColor = "#666";
+        wrap.style.width = maxH / 16 * 9 + "px";
     }
     console.log(window.navigator.userAgent);
 })()
