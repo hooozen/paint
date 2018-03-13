@@ -1,5 +1,7 @@
 # paint
 Html5 你画我猜移动 Web 版
+## 说明 2018-3
+由于项目地址域名最近开启了 CDN 加速，导致 Websocket 无法连接，所以游戏暂不能正常运行。
 ## 概述
 这是一款基于 HTML5、JavaScript、CSS、PHP 纯手工实现的 web 在线小游戏。
 
