@@ -1,7 +1,5 @@
 # paint
 Html5 你画我猜移动 Web 版
-## 说明 2018-3
-由于项目地址域名最近开启了 CDN 加速，导致 Websocket 无法连接，所以游戏暂不能正常运行。
 ## 概述
 这是一款基于 HTML5、JavaScript、CSS、PHP 纯手工实现的 web 在线小游戏。
 
@@ -9,7 +7,8 @@ Html5 你画我猜移动 Web 版
 
 所以，相对来说前端的知识使用的比较基础，难点和重点在于类之间的设计和联系以及计算机网络通信的原理。
 ## 项目地址
-游戏地址：[你画我猜](http://hozen.site/apps/paint)
+游戏地址：[你画我猜](http://hozen.site/paint)
+**由于域名上了 https，导致 websocket 连接不被允许，所以该地址暂无法体验游戏**
 
 说明：一直是基于移动端和最新版Chrome开发的，所以手机端chrome体验可能要好一些，兼容性也不是很健壮。推荐使用手机或桌面最新版 Chrome 或者 FireFox 体验
 ## 本地部署
